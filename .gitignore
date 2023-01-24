@@ -1,2 +1,4 @@
 *.xl
 /data
+*.DS
+__pycache__/
