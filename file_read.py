@@ -49,7 +49,11 @@ def parse_contents(contents, filename, date):
     decoded = base64.b64decode(content_string)
     try:
         workbook_xl = pd.ExcelFile(io.BytesIO(decoded))
-
+        print(workbook_xl)
+        
+        #NOTE; error on NG workbook - "No numeric types to aggregate" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        
+        
         #aggregates all months data into a single data frame
         def get_all_months(workbook_xl):
             months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
