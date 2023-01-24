@@ -14,10 +14,13 @@ def get_month_dataframe(workbook_xl, month):
     #read in necessary sheets 
     df = pd.read_excel(workbook_xl, sheet_name=month, skiprows=[1,2])
     dfyr = pd.read_excel(workbook_xl, sheet_name=0)
+    print(dfyr)
 
     #get years variable 
     year = dfyr.iloc[3,1]
+    print(year)
     year1, year2 = str.split(year, '-')
+    
 
     #select necessary columns and front fill NaNs in month column 
     dfbeh = df.iloc[:, [0,1,2,4,7,22,25,40,43,58,61,76,79]]

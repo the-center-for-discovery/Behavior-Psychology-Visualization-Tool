@@ -19,6 +19,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = html.Div([ # this code section taken from Dash docs https://dash.plotly.com/dash-core-components/upload
+    dcc.Store(id='stored-data', storage_type='session'),
     dcc.Upload(
         id='upload-data',
         children=html.Div([
@@ -52,18 +53,15 @@ def parse_contents(contents, filename, date):
         #aggregates all months data into a single data frame
         def get_all_months(workbook_xl):
             months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
-            xl_file = pd.ExcelFile('data/DP Beh Data 2022-23.xlsm')
+            xl_file = pd.ExcelFile(workbook_xl)
             months_data = []
             for month in months:
                 months_data.append(get_month_dataframe(xl_file, month))
             return pd.concat(months_data)
         
         df = get_all_months(workbook_xl)
+        
         dfmean = df.groupby(['Date', 'variable'],sort=False,)['value'].mean().round(2).reset_index()
-        print(df.shape)
-        print(df)
-        print(dfmean)
-
     
     except Exception as e:
         print(e)
@@ -73,7 +71,7 @@ def parse_contents(contents, filename, date):
 
     return html.Div([
         html.H5(filename),
-        html.H6(datetime.datetime.fromtimestamp(date)),
+        # html.H6(datetime.datetime.fromtimestamp(date)),
         
         dash_table.DataTable(
             data=dfmean.to_dict('records'),
@@ -81,7 +79,7 @@ def parse_contents(contents, filename, date):
             page_size=15
         ),
         dcc.Store(id='stored-data', data=dfmean.to_dict('records')),
-
+        
         html.Hr(),  # horizontal line
 
         # For debugging, display the raw contents provided by the web browser
@@ -91,7 +89,6 @@ def parse_contents(contents, filename, date):
             'wordBreak': 'break-all'
         })
     ])
-
 
 @app.callback(Output('output-datatable', 'children'),
               Input('upload-data', 'contents'),
@@ -107,13 +104,23 @@ def update_output(list_of_contents, list_of_names, list_of_dates):
         return children
 
 
-# @app.callback(Output('output-div', 'children'),
-#               Input('stored-data','data'))
-# def make_graphs(data):
-#     print(data.dtype)
-#     bar_fig = px.bar(data, x=data['variable'], y=data['value'])
-#     # print(data)
-#     return dcc.Graph(figure=bar_fig)
+@app.callback(Output('output-div', 'children'),
+              Input('stored-data','data'))
+
+def make_graphs(data):
+    
+    df_agg = pd.DataFrame(data)
+    
+    # df_agg['Date'] = pd.to_datetime(df_agg['Date'])
+
+    print(df_agg)
+    
+    if df_agg.empty:
+        print("Dataframe epmty")
+    else:
+        bar_fig = px.bar(df_agg, x=df_agg['Date'], y=df_agg['value'], color = 'variable',barmode='group')
+        return dcc.Graph(figure=bar_fig)
     
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    # app.run_server(debug=True)
+    app.run_server(host='10.1.183.44', port=8050)
