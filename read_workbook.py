@@ -64,6 +64,7 @@ def get_month_dataframe(workbook_xl, month):
 
     #cocatanate into one lare dataframe, drop unnecessary rows 
     behs = pd.concat(behdfs)
+    
     behs = behs[~behs['variable'].isin(['Insert_beh'])]
     #tidy up variable names and reset index
     behs['variable'] = behs['variable'].str.replace(r'_beh', '')

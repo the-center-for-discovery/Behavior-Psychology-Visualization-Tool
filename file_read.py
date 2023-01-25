@@ -1,6 +1,7 @@
 import base64
 import datetime
 import io
+import re
 
 import dash
 from dash.dependencies import Input, Output, State
@@ -64,8 +65,18 @@ def parse_contents(contents, filename, date):
             return pd.concat(months_data)
         
         df = get_all_months(workbook_xl)
+        df.to_csv('findstring.csv')
+
+        #NOTE; issue that period ('.') in value column 
+
+        print(df.head(100))
+
+        # df['value'] = df['value'].astype(float)
+
+        print(df.dtypes)
         
         dfmean = df.groupby(['Date', 'variable'],sort=False,)['value'].mean().round(2).reset_index()
+        print(dfmean)
     
     except Exception as e:
         print(e)
@@ -116,8 +127,6 @@ def make_graphs(data):
     df_agg = pd.DataFrame(data)
     
     # df_agg['Date'] = pd.to_datetime(df_agg['Date'])
-
-    print(df_agg)
     
     if df_agg.empty:
         print("Dataframe epmty")
@@ -126,5 +135,6 @@ def make_graphs(data):
         return dcc.Graph(figure=bar_fig)
     
 if __name__ == '__main__':
-    # app.run_server(debug=True)
-    app.run_server(host='10.1.183.44', port=8050)
+    app.run_server(debug=True)
+    
+    # app.run_server(host='10.1.183.44', port=8050)
