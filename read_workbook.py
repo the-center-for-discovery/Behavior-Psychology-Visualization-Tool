@@ -72,6 +72,16 @@ def get_month_dataframe(workbook_xl, month):
     #create date column and convery to padas datetime
     behs['Date'] = date + '-' + behs.iloc[:,0].astype(str)
     behs['Date'] = pd.to_datetime(behs['Date'])
+
+    #clean up values, return NaN for all unrecognized strings (ie ".")
+    values = behs['value']
+    for value_i, val in enumerate(values):
+        try: 
+            behs['value'][value_i] = float(behs['value'][value_i])
+        except:
+            behs['value'][value_i] = float("NaN")
+
+
     #get the name of the first column, which we drop
     month_to_remove = behs.columns[0]
     return behs.drop(month_to_remove, axis=1)
