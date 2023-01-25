@@ -81,7 +81,6 @@ def get_month_dataframe(workbook_xl, month):
         except:
             behs['value'][value_i] = float("NaN")
 
-
     #get the name of the first column, which we drop
     month_to_remove = behs.columns[0]
     return behs.drop(month_to_remove, axis=1)

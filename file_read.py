@@ -52,9 +52,6 @@ def parse_contents(contents, filename, date):
         workbook_xl = pd.ExcelFile(io.BytesIO(decoded))
         print(workbook_xl)
         
-        #NOTE; error on NG workbook - "No numeric types to aggregate" !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        
-        
         #aggregates all months data into a single data frame
         def get_all_months(workbook_xl):
             months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
@@ -64,19 +61,12 @@ def parse_contents(contents, filename, date):
                 months_data.append(get_month_dataframe(xl_file, month))
             return pd.concat(months_data)
         
+        #run get all months function and produce behavior dataframe 
         df = get_all_months(workbook_xl)
-        df.to_csv('findstring.csv')
 
-        #NOTE; issue that period ('.') in value column 
-
-        print(df.head(100))
-
-        # df['value'] = df['value'].astype(float)
-
-        print(df.dtypes)
-        
+        #convert episode values to float and aggregate mean per shift 
+        df['value'] = df['value'].astype(float)
         dfmean = df.groupby(['Date', 'variable'],sort=False,)['value'].mean().round(2).reset_index()
-        print(dfmean)
     
     except Exception as e:
         print(e)
