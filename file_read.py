@@ -13,6 +13,8 @@ import plotly.express as px
 import pandas as pd
 from read_workbook import *
 
+import pdb
+
 suppress_callback_exceptions=True
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -50,15 +52,17 @@ def parse_contents(contents, filename, date):
     decoded = base64.b64decode(content_string)
     try:
         workbook_xl = pd.ExcelFile(io.BytesIO(decoded))
-        print(workbook_xl)
+        # print(workbook_xl)
         
         #aggregates all months data into a single data frame
         def get_all_months(workbook_xl):
             months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
             xl_file = pd.ExcelFile(workbook_xl)
+            
             months_data = []
             for month in months:
                 months_data.append(get_month_dataframe(xl_file, month))
+                print(months_data)
             return pd.concat(months_data)
         
         #run get all months function and produce behavior dataframe 
@@ -67,6 +71,7 @@ def parse_contents(contents, filename, date):
         #convert episode values to float and aggregate mean per shift 
         df['value'] = df['value'].astype(float)
         dfmean = df.groupby(['Date', 'variable'],sort=False,)['value'].mean().round(2).reset_index()
+
     
     except Exception as e:
         print(e)
@@ -125,6 +130,6 @@ def make_graphs(data):
         return dcc.Graph(figure=bar_fig)
     
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    # app.run_server(debug=True)
     
-    # app.run_server(host='10.1.183.44', port=8050)
+    app.run_server(host='10.1.183.44', port=8050)
