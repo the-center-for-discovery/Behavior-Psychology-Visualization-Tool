@@ -21,6 +21,8 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
+dfmeans = []
+
 app.layout = html.Div([ # this code section taken from Dash docs https://dash.plotly.com/dash-core-components/upload
     dcc.Store(id='stored-data', storage_type='session'),
     dcc.Upload(
@@ -71,6 +73,8 @@ def parse_contents(contents, filename, date):
         #convert episode values to float and aggregate mean per shift 
         df['value'] = df['value'].astype(float)
         dfmean = df.groupby(['Date', 'variable'],sort=False,)['value'].mean().round(2).reset_index()
+        dfmeans.append(dfmean)
+        dfmean = pd.concat(dfmeans)
 
     
     except Exception as e:
@@ -130,6 +134,6 @@ def make_graphs(data):
         return dcc.Graph(figure=bar_fig)
     
 if __name__ == '__main__':
-    # app.run_server(debug=True)
+    app.run_server(debug=True)
     
-    app.run_server(host='10.1.183.44', port=8050)
+    # app.run_server(host='10.1.183.44', port=8050)
