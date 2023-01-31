@@ -21,7 +21,6 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-dfmeans = []
 
 app.layout = html.Div([ # this code section taken from Dash docs https://dash.plotly.com/dash-core-components/upload
     dcc.Store(id='stored-data', storage_type='session'),
@@ -48,10 +47,12 @@ app.layout = html.Div([ # this code section taken from Dash docs https://dash.pl
     html.Div(id='output-datatable'),
 ])
 
-def parse_contents(contents, filename, date):
+def parse_contents(contents, filename, date, store_data):
     content_type, content_string = contents.split(',')
     
     decoded = base64.b64decode(content_string)
+    stored_df = pd.DataFrame(store_data)
+    # print("YO", stored_df)
     try:
         workbook_xl = pd.ExcelFile(io.BytesIO(decoded))
         # print(workbook_xl)
@@ -64,7 +65,7 @@ def parse_contents(contents, filename, date):
             months_data = []
             for month in months:
                 months_data.append(get_month_dataframe(xl_file, month))
-                print(months_data)
+                # print(months_data)
             return pd.concat(months_data)
         
         #run get all months function and produce behavior dataframe 
@@ -73,8 +74,7 @@ def parse_contents(contents, filename, date):
         #convert episode values to float and aggregate mean per shift 
         df['value'] = df['value'].astype(float)
         dfmean = df.groupby(['Date', 'variable'],sort=False,)['value'].mean().round(2).reset_index()
-        dfmeans.append(dfmean)
-        dfmean = pd.concat(dfmeans)
+        dfmean = pd.concat([stored_df, dfmean])
 
     
     except Exception as e:
@@ -107,13 +107,13 @@ def parse_contents(contents, filename, date):
 @app.callback(Output('output-datatable', 'children'),
               Input('upload-data', 'contents'),
               State('upload-data', 'filename'),
-              State('upload-data', 'last_modified'))
+              State('upload-data', 'last_modified'),
+              State('stored-data','data'))
 
-def update_output(list_of_contents, list_of_names, list_of_dates):
-    
+def update_output(list_of_contents, list_of_names, list_of_dates, store_data):
     if list_of_contents is not None:
         children = [
-            parse_contents(c, n, d) for c, n, d in
+            parse_contents(c, n, d, store_data) for c, n, d in
             zip(list_of_contents, list_of_names, list_of_dates)]
         return children
 

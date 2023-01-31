@@ -24,7 +24,7 @@ def get_month_dataframe(workbook_xl, month):
     # pdb.set_trace()
     #select necessary columns and front fill NaNs in month column 
     dfbeh = df.iloc[:, [0,1,2,4,7,22,25,40,43,58,61,76,79]]
-    print(dfbeh.head())
+    #print(dfbeh.head())
     dfbeh = dfbeh.rename(columns = {'Unnamed: 1':'Shift','Unnamed: 2':'No Data','Unnamed: 7':str(dfbeh.columns[3])+'_beh','Unnamed: 25':str(dfbeh.columns[5])+'_beh',
                                     'Unnamed: 43':str(dfbeh.columns[7])+'_beh','Unnamed: 61':str(dfbeh.columns[9])+'_beh','Unnamed: 79':str(dfbeh.columns[11])+'_beh'})
     dfbeh.iloc[:,0] = dfbeh.iloc[:,0].fillna(method='ffill')
