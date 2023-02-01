@@ -2,7 +2,7 @@ import dash # v 1.16.2
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html  # v 1.1.1
-import dash_auth
+# import dash_auth
 
 import calendar
 import datetime
@@ -20,26 +20,28 @@ import numpy as np
 #setup Dash app 
 app = dash.Dash(__name__, title='Behavior Medication Dashboard', external_stylesheets=[dbc.themes.DARKLY], prevent_initial_callbacks=True)
 
-auth = dash_auth.BasicAuth(
-    app,
-    {'temp': 'Disc0very21',
-    }
-)
+# auth = dash_auth.BasicAuth(
+#     app,
+#     {'temp': 'Disc0very21',
+#     }
+# )
 
 def dashboard():
     #import necessary files 
     pd.set_option('display.max_columns', 200)
     #store pathnames for relevent development machines
     #pathnames pro
-    dir_pro = '//DISCOVERYDB/Data Warehouse/Output_CUBRC/'
+    
+    #NOTE; dataframe (dfmean) needs to be passed as an input here
+    dir_pro = '/Users/canderson/Documents/Python/warehouse_data/latest/'
     path_pro = glob.glob(dir_pro + 'tbl_Clinical_Behavior_Tracking_01_Target_00_No_Data_*')
-    print(path_pro[1])
+    print(path_pro[0])
     path_meds = glob.glob(dir_pro + 'tbl_Clinical_Behavior_Tracking_06_Medications_Data_*')
-    df_meds = pd.read_csv(path_meds[1],dtype='unicode')
-    path_bm = glob.glob(dir_pro + 'tbl_Clinical_BM_Menses_*')
-    df_bm = pd.read_csv(path_bm[1],dtype='unicode')
-    path_slp = glob.glob(dir_pro + 'tbl_Clinical_Sleep_*')
-    df_slp = pd.read_csv(path_slp[1],dtype='unicode')
+    df_meds = pd.read_csv(path_meds[0],dtype='unicode')
+    # path_bm = glob.glob(dir_pro + 'tbl_Clinical_BM_Menses_*')
+    # df_bm = pd.read_csv(path_bm[0],dtype='unicode')
+    # path_slp = glob.glob(dir_pro + 'tbl_Clinical_Sleep_*')
+    # df_slp = pd.read_csv(path_slp[0],dtype='unicode')
    
     #df macpro
     df = pd.read_csv(path_pro[0], dtype='unicode')
@@ -53,11 +55,11 @@ def dashboard():
         ' (' + df_meds['Unit'] + ')' #zach - why not on one line
     df_meds[['Start', 'End']] = df_meds[['Start', 'End']].apply(pd.to_datetime)
     df_meds['Dose'] = pd.to_numeric(df_meds['Dose'])
-    df_bm['Menses'].replace({'False': 0, 'True': 1}, inplace=True)
-    df_slp['Date'] = pd.to_datetime(df_slp['Date'])
-    df_slp['Sleep_Hours'] = pd.to_numeric(df_slp['Sleep_Hours'])
-    df_bm.head()
-    df_bm['Date'] = pd.to_datetime(df_bm['Date'])
+    # df_bm['Menses'].replace({'False': 0, 'True': 1}, inplace=True)
+    # df_slp['Date'] = pd.to_datetime(df_slp['Date'])
+    # df_slp['Sleep_Hours'] = pd.to_numeric(df_slp['Sleep_Hours'])
+    # df_bm.head()
+    # df_bm['Date'] = pd.to_datetime(df_bm['Date'])
 
     print(datetime.now())
 
@@ -230,9 +232,9 @@ def dashboard():
             #2 rows containing graphs
             dbc.Row(
                 dbc.Col(
-            dcc.Graph(id='beh_meds_bar',figure={}),
-                    width={'size': 10,'offset':1, 'order':1}
-                            ),
+                    dcc.Graph(id='beh_meds_bar',figure={}),
+                            width={'size': 10,'offset':1, 'order':1}
+                        ),
                     ),
 
             dbc.Row(
@@ -252,55 +254,58 @@ def dashboard():
                         
                         ),
                     
-                    dbc.Col(
-                        dcc.Textarea(
-                        id='text_meds',
-                        value='Add notes...',
-                        style={'width': '80%', 'height': 50},
-                        ),width={'size': 6, 'offset':6,},
-                    ),
+                    # dbc.Col(
+                    #     dcc.Textarea(
+                    #     id='text_meds',
+                    #     value='Add notes...',
+                    #     style={'width': '80%', 'height': 50},
+                    #     ),width={'size': 6, 'offset':6,},
+                    # ),
                     
                     ]
                     ),
 
-
-
             dbc.Row(
-                
-            dcc.Tabs([
-                
-                dcc.Tab(label='Medication Data', children=[
-                    
-                    dbc.Col(        
-                        dcc.Graph(id='beh_meds_line', figure={}),
-                        width={'size': 10,'offset':1, 'order':1}
-                            ),
-                        
-                                                    ]
+                    dbc.Col(
+                    dcc.Graph(id='beh_meds_line',figure={}),
+                            width={'size': 10,'offset':1, 'order':1}
                         ),
-                dcc.Tab(label='BM/Menses', children=[
-                    
-                    dbc.Col(        
-                        dcc.Graph(id='bm_mens', figure={}),
-                        width={'size': 10,'offset':1, 'order':1}
-                            ),
-                        
-                                                    ]
-                        ),      
-                    
-                dcc.Tab(label='Sleep', children=[
-                    
-                    dbc.Col(        
-                        dcc.Graph(id='sleep', figure={}),
-                        width={'size': 10,'offset':1, 'order':1}
-                            ),
-                        
-                                                    ]
-                        ),      
-                    
-                    ]),              
-                    
                     ),
+                
+            # dcc.Tabs([
+                
+            #     dcc.Tab(label='Medication Data', children=[
+                    
+            #         dbc.Col(        
+            #             dcc.Graph(id='beh_meds_line', figure={}),
+            #             width={'size': 10,'offset':1, 'order':1}
+            #                 ),
+                        
+            #                                         ]
+            #             ),
+            #     dcc.Tab(label='BM/Menses', children=[
+                    
+            #         dbc.Col(        
+            #             dcc.Graph(id='bm_mens', figure={}),
+            #             width={'size': 10,'offset':1, 'order':1}
+            #                 ),
+                        
+            #                                         ]
+            #             ),      
+                    
+            #     dcc.Tab(label='Sleep', children=[
+                    
+            #         dbc.Col(        
+            #             dcc.Graph(id='sleep', figure={}),
+            #             width={'size': 10,'offset':1, 'order':1}
+            #                 ),
+                        
+            #                                         ]
+            #             ),      
+                    
+            #         ]),              
+                    
+                    # ),
 
             # end of Div 
             ],
@@ -311,8 +316,8 @@ def dashboard():
         [
         dash.dependencies.Output(component_id='beh_meds_bar', component_property='figure'),
         dash.dependencies.Output(component_id='beh_meds_line', component_property='figure'),
-        dash.dependencies.Output(component_id='bm_mens', component_property='figure'),
-        dash.dependencies.Output(component_id='sleep', component_property='figure')
+        # dash.dependencies.Output(component_id='bm_mens', component_property='figure'),
+        # dash.dependencies.Output(component_id='sleep', component_property='figure')
         ],
         [
         dash.dependencies.Input('my-date-picker-range', 'start_date'), # zach - why positional only here?
@@ -329,28 +334,34 @@ def dashboard():
     # define function to control graphical outputs
     def update_graph(start_date,end_date,patient,agg,time,beh_gph,scale,shift):
 
-        print(shift) 
+        print(shift)
+        
+        #NOTE; need to align final date of behavior with final date of medication
         
         ''' Function that takes inputs from front end, consolidates and filters data based 
             on specific information request and displays graphically for end user '''
 
         #select data subset by individual 
         dfq = df.query('Name == @patient')
+        print(dfq.head())
         dfmeds = df_meds.query('Name == @patient')
-        dfbm = df_bm.query('Name == @patient')
-        dfslp = df_slp.query('Name == @patient')
+        # dfbm = df_bm.query('Name == @patient')
+        # dfslp = df_slp.query('Name == @patient')
 
         #select whether to aggrate by mean or count 
         if agg == 'mean':
             tally = "Average"
         else:
             tally = "Count"
-
+        print(time)
         #select date format 
         if time == 'mon':
             date_frmt = "Yr_Mnth"
         elif time == 'wk' or time == 'day':
             date_frmt = "Date"
+        elif time == 'shift':
+            date_frmt = "Date_Time"
+            
         elif time == 'roll':
             date_frmt = "Rolling"
         else:
@@ -363,6 +374,7 @@ def dashboard():
         #read date range from UI and filter behavior dataset 
         flt_beh = (dfq['Date'] >= start_date) & (dfq['Date'] <= end_date)
         dfq = dfq.loc[flt_beh]
+        print(dfq.head())
         #format date variables for grouping requirements
         dfq['Year'] = pd.DatetimeIndex(dfq['Date']).year
         dfq['Month'] = pd.DatetimeIndex(dfq['Date']).month
@@ -373,7 +385,7 @@ def dashboard():
         dfq = dfq.replace('SIB', 'Self-Injury')
         print(dfq.head())
 
-
+        #NOTE; dataframes are aggregated here per selection of timeframe 
         #determine groupings for various graphical outputs
         if time == 'mon' and agg == 'mean':
             dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
@@ -396,6 +408,8 @@ def dashboard():
         if time == 'day' and agg == 'mean':
             dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
             dfg = dfd
+            print("day: \n")
+            print(dfd.head())
         elif time == 'day' and agg == 'sum':
             dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
             dfg = dfd
@@ -404,6 +418,7 @@ def dashboard():
 
         if time == 'shift' and agg == 'mean':
             dfs = dfq.groupby(['Date_Time', 'Target',],sort=False,)['Episode_Count'].mean().reset_index()
+            print("shift: \n")
             print(dfs.head())
             dfg = dfs
         elif time == 'shift' and agg == 'sum':
@@ -472,8 +487,6 @@ def dashboard():
         dfmeds.sort_values(by = 'Start' , ascending = True, inplace=True)
         dfmeds = dfmeds.drop_duplicates(subset = ['Start','Medication'],keep='last')
 
-        dfmeds.to_csv("output_{}.csv".format(patient))
-
         #create duplicate daily entries for all dosage data between start and end dates 
         if not dfmeds.empty:
             dfmeds = pd.concat([g.set_index('Start').reindex(pd.date_range(g['Start'].min(), g['End'].max(), freq='d'), method='ffill').reset_index().rename({'index':'Start'}, axis=1)
@@ -483,7 +496,7 @@ def dashboard():
         #if no medication data within daterange create null dataframe
         elif dfmeds.empty:
             dfmeds = dfmeds.append({'Name':patient,'Medication':'Null','Measure_Date_Year': start_date, 'Start':start_date, 'End':end_date, 'Dose':0}, ignore_index=True)
-        print(dfmeds)
+        # print(dfmeds)
 
         #read date range from UI and filter medication dataset 
         flt_meds = (dfmeds['Start'] >= start_date) & (dfmeds['Start'] <= end_date)
@@ -510,48 +523,45 @@ def dashboard():
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
 
-        #BM_MENS DATA ------------------------------------------------------------------------------------------------------
+        # #BM_MENS DATA ------------------------------------------------------------------------------------------------------
         
-        flt_bm = (dfbm['Date'] >= start_date) & (dfbm['Date'] <= end_date)
-        dfbm = dfbm.loc[flt_bm]
+        # flt_bm = (dfbm['Date'] >= start_date) & (dfbm['Date'] <= end_date)
+        # dfbm = dfbm.loc[flt_bm]
         
-        dfbm = dfbm.groupby(['Date','BM_Bristol','Menses'])['BM_Size'].count().reset_index()
+        # dfbm = dfbm.groupby(['Date','BM_Bristol','Menses'])['BM_Size'].count().reset_index()
         
-        dfbm = dfbm.drop_duplicates(subset = ['Date','Menses'],keep='last')
+        # dfbm = dfbm.drop_duplicates(subset = ['Date','Menses'],keep='last')
 
-        fig3 = make_subplots(specs=[[{"secondary_y": True}]])
+        # fig3 = make_subplots(specs=[[{"secondary_y": True}]])
 
-        x = dfbm['Date']
-        bm = dfbm['BM_Size']
-        mn = dfbm['Menses']
-        fig3.add_trace(go.Scatter(x=x, y=bm,name='BM'), secondary_y=False,)
-        fig3.add_trace(go.Bar(x=x, y=mn,name='Menses'), secondary_y=True,)
+        # x = dfbm['Date']
+        # bm = dfbm['BM_Size']
+        # mn = dfbm['Menses']
+        # fig3.add_trace(go.Scatter(x=x, y=bm,name='BM'), secondary_y=False,)
+        # fig3.add_trace(go.Bar(x=x, y=mn,name='Menses'), secondary_y=True,)
 
-        fig3.update_xaxes(tickangle=45,)
+        # fig3.update_xaxes(tickangle=45,)
 
-        fig3.update_yaxes(title_text="BM Frequency",secondary_y=False,rangemode = "tozero")
-        fig3.update_yaxes(title_text="Menses",secondary_y=True,tickmode = 'array',tickvals=[0,1],ticktext = ["False","True"], )
+        # fig3.update_yaxes(title_text="BM Frequency",secondary_y=False,rangemode = "tozero")
+        # fig3.update_yaxes(title_text="Menses",secondary_y=True,tickmode = 'array',tickvals=[0,1],ticktext = ["False","True"], )
 
-        #SLEEP DATA ------------------------------------------------------------------------------------------------------
-        flt_slp = (dfslp['Date'] >= start_date) & (dfslp['Date'] <= end_date)
-        dfslp = dfslp.loc[flt_slp]
+        # #SLEEP DATA ------------------------------------------------------------------------------------------------------
+        # flt_slp = (dfslp['Date'] >= start_date) & (dfslp['Date'] <= end_date)
+        # dfslp = dfslp.loc[flt_slp]
 
-        dfslp = dfslp.groupby(['Date'])['Sleep_Hours'].mean().reset_index()
+        # dfslp = dfslp.groupby(['Date'])['Sleep_Hours'].mean().reset_index()
 
-        fig4 = px.line(dfslp,x='Date', y='Sleep_Hours',)
-        fig4.update_traces(line=dict(color="#00cc99"))
+        # fig4 = px.line(dfslp,x='Date', y='Sleep_Hours',)
+        # fig4.update_traces(line=dict(color="#00cc99"))
 
-        return fig, fig2, fig3, fig4
+        return fig, fig2 #, fig3, fig4
 
         # ------------------------------------------------------------------------------
 
-
-# if __name__ == '__main__':
 print("\nloading... \n")
 dashboard() 
 print("\nComplete! \n")
-# app.run_server(debug=True)
 
 if __name__ == '__main__':
-    # app.run_server(debug=True)
-    app.run_server(host='10.1.84.77', port=8050)
+    app.run_server(debug=True)
+    # app.run_server(host='10.1.84.77', port=8050)

@@ -75,7 +75,6 @@ def parse_contents(contents, filename, date, store_data):
         df['value'] = df['value'].astype(float)
         dfmean = df.groupby(['Date', 'variable'],sort=False,)['value'].mean().round(2).reset_index()
         dfmean = pd.concat([stored_df, dfmean])
-
     
     except Exception as e:
         print(e)
