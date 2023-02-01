@@ -81,15 +81,15 @@ def dashboard():
     #design layout of UI
     app.layout = html.Div([
 
-        dcc.Interval(
-            id='my_interval',
-            disabled=False,  # if True, the counter will no longer update
-            interval=1*3000,  # increment the counter n_intervals every interval milliseconds
-            n_intervals=0,  # number of times the interval has passed
-            max_intervals=4,  # number of times the interval will be fired.
-            #if -1, then the interval has no limit (the default)
-            #and if 0 then the interval stops running.
-        ),
+        # dcc.Interval(
+        #     id='my_interval',
+        #     disabled=False,  # if True, the counter will no longer update
+        #     interval=1*3000,  # increment the counter n_intervals every interval milliseconds
+        #     n_intervals=0,  # number of times the interval has passed
+        #     max_intervals=4,  # number of times the interval will be fired.
+        #     #if -1, then the interval has no limit (the default)
+        #     #and if 0 then the interval stops running.
+        # ),
                     #div containing labels and input functions 
                     html.Div([
                         #add CFD logo and label for resident selection
