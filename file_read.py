@@ -41,7 +41,7 @@ app.layout = html.Div([ # this code section taken from Dash docs https://dash.pl
             'margin': '10px'
         },
         # Allow multiple files to be uploaded
-        multiple=True
+        multiple=False
     ),
     html.Div(id='output-div'),
     html.Div(id='output-datatable'),

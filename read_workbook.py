@@ -54,6 +54,8 @@ def get_month_dataframe(workbook_xl, month):
         #create long format df for behavior and drop unnecessary rows 
         beh_id = pd.melt(dfbeh, id_vars = [dfbeh.columns[0],dfbeh.columns[1],dfbeh.columns[2]],value_vars =[dfbeh.columns[bidx]])
         beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 93)])
+
+        
         if month_num == 4 or month_num == 6 or month_num == 9 or month_num == 11:
             beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 90)])
         elif month_num ==2:

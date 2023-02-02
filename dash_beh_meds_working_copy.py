@@ -3,11 +3,11 @@ import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html  # v 1.1.1
 # import dash_auth
-import base64
+
 import calendar
 import datetime
+from datetime import date
 from datetime import date, datetime, timedelta
-# from datetime import *
 import time 
 from flask import Flask
 import glob
@@ -16,11 +16,6 @@ import plotly.express as px # plotly v 5.2.1
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
-
-import io
-import re
-
-from read_workbook import get_month_dataframe 
 
 #setup Dash app 
 app = dash.Dash(__name__, title='Behavior Medication Dashboard', external_stylesheets=[dbc.themes.DARKLY], prevent_initial_callbacks=True)
@@ -35,20 +30,17 @@ def dashboard():
     print(path_pro[0])
     path_meds = glob.glob(dir_pro + 'tbl_Clinical_Behavior_Tracking_06_Medications_Data_*')
     df_meds = pd.read_csv(path_meds[0],dtype='unicode')
-    df_meds = df_meds.query('Name == "Ballantine-Kaplan, Eli"')
    
     #df macpro
     df = pd.read_csv(path_pro[0], dtype='unicode')
-    df = df.query('Name == "Ballantine-Kaplan, Eli"')
-    patient = "Ballantine-Kaplan, Eli"
 
     #configure formatting of colums where necessary
     df['Date'] = pd.to_datetime(df['Date'])
     df['Date_Time'] = pd.to_datetime(df['Date_Time'])
     df['Episode_Count'] = pd.to_numeric(df['Episode_Count'])
-    df_meds['Dose'] = df_meds['Dose'].str.extract('(\d+)', expand=False) #zach - what does this line do?
-    df_meds['Medication'] = df_meds['Medication'] + \
-        ' (' + df_meds['Unit'] + ')' #zach - why not on one line
+    #use regex to remove string characters 
+    df_meds['Dose'] = df_meds['Dose'].str.extract('(\d+)', expand=False) 
+    df_meds['Medication'] = df_meds['Medication'] + ' (' + df_meds['Unit'] + ')'
     df_meds[['Start', 'End']] = df_meds[['Start', 'End']].apply(pd.to_datetime)
     df_meds['Dose'] = pd.to_numeric(df_meds['Dose'])
 
@@ -82,51 +74,30 @@ def dashboard():
                                     width={'size': 6,'offset':0, 'order':1},
                                         ),    
                                 
-                                # dbc.Col(
-                                #     html.Label('Select Resident'), 
-                                #     style={'font-size': '18px','margin-top': 10,'margin-bottom':0},
-                                #     width={'size': 2,'offset':9, 'order':3},
-                                #         ),     
+                                dbc.Col(
+                                    html.Label('Select Resident'), 
+                                    style={'font-size': '18px','margin-top': 10,'margin-bottom':0},
+                                    width={'size': 2,'offset':9, 'order':3},
+                                        ),     
                                 ]
                                 ),
                         #row containing label and resident select
-                            dcc.Store(id='stored-data', storage_type='session'),
-                            
-                            dcc.Upload(
-                                id='upload-data',
-                                children=html.Div([
-                                    'Drag and Drop or ',
-                                    html.A('Select Files')
-                                ]),
-                                style={
-                                    'width': '100%',
-                                    'height': '60px',
-                                    'lineHeight': '60px',
-                                    'borderWidth': '1px',
-                                    'borderStyle': 'dashed',
-                                    'borderRadius': '5px',
-                                    'textAlign': 'center',
-                                    'margin': '10px'
-                                },
-                                # Allow multiple files to be uploaded
-                                multiple=True
-                            ),
-                        # dbc.Row(
-                        #         [
-                        #         dbc.Col(
-                        #             # replace with file widget
-                        #             dcc.Dropdown(id="slct_pt",
-                        #                         options=[
-                        #                             {'label':i,'value':i} for i in names
-                        #                             ],
-                        #                         clearable=False,
-                        #                         value='Ballantine-Kaplan, Eli', #zach - hardcoded name
-                        #                         ),  
-                        #             style={'margin-top':0},
-                        #             width={'size': 2,'offset':9, 'order':2},
-                        #                 ),
-                        #         ]
-                        #         ),
+                        dbc.Row(
+                                [
+                                dbc.Col(
+                                    # replace with file widget
+                                    dcc.Dropdown(id="slct_pt",
+                                                options=[
+                                                    {'label':i,'value':i} for i in names
+                                                    ],
+                                                clearable=False,
+                                                value='Ballantine-Kaplan, Eli', #zach - hardcoded name
+                                                ),  
+                                    style={'margin-top':0},
+                                    width={'size': 2,'offset':9, 'order':2},
+                                        ),
+                                ]
+                                ),
                         #row conaining date widget, aggregate selection 
                         dbc.Row(
                                 [
@@ -201,11 +172,11 @@ def dashboard():
                                         dcc.Checklist(
                                                 id = 'slct_sft',
                                                 options=[
-                                                    {'label': '7:00 AM', 'value': '7-3'},
-                                                    {'label': '3:00 PM', 'value': '3-11'},
-                                                    {'label': '11:00 PM', 'value': '11-7'}
+                                                    {'label': '7:00 AM', 'value': '07:00:00'},
+                                                    {'label': '3:00 PM', 'value': '15:00:00'},
+                                                    {'label': '11:00 PM', 'value': '23:00:00'}
                                                         ],
-                                                value=['7-3', '3-11', '11-7'],
+                                                value=['07:00:00', '15:00:00', '23:00:00'],
                                                 style={'display': 'inline-block', 'margin-top':10},
                                                 inputStyle={"margin-left": "10px", "margin-right": "10px"}
                                                     ),width={'size': 2, 'offset':0,'order':2},
@@ -266,67 +237,8 @@ def dashboard():
                             width={'size': 10,'offset':1, 'order':1}
                         ),
                     ),
-            html.Div(id='output-div'),
-            html.Div(id='output-datatable'),
-            
             ],
         )
-    
-    ##############################
-    
-    def parse_contents(contents, filename, date, store_data):
-        content_type, content_string = contents.split(',')
-        
-        decoded = base64.b64decode(content_string)
-        stored_df = pd.DataFrame(store_data)
-        # print("YO", stored_df)
-        try:
-            workbook_xl = pd.ExcelFile(io.BytesIO(decoded))
-            # print(workbook_xl)
-            
-            #aggregates all months data into a single data frame
-            def get_all_months(workbook_xl):
-                months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
-                xl_file = pd.ExcelFile(workbook_xl)
-                
-                months_data = []
-                for month in months:
-                    months_data.append(get_month_dataframe(xl_file, month))
-                    # print(months_data)
-                return pd.concat(months_data)
-            
-            #run get all months function and produce behavior dataframe 
-            df = get_all_months(workbook_xl)
-            print(df.head())
-            #convert episode values to float and aggregate mean per shift 
-            df['value'] = df['value'].astype(float)
-            dfmean = df.groupby(['Date', 'Shift','variable'],sort=False,)['value'].mean().round(2).reset_index()
-            dfmean = pd.concat([stored_df, dfmean])
-        
-        except Exception as e:
-            print(e)
-            return html.Div([
-                'There was an error processing this file.'
-            ])
-
-        return html.Div([
-            dcc.Store(id='stored-data', data=dfmean.to_dict('records')),
-                        ])
-
-    @app.callback(dash.dependencies.Output('output-datatable', 'children'),
-                dash.dependencies.Input('upload-data', 'contents'),
-                dash.dependencies.State('upload-data', 'filename'),
-                dash.dependencies.State('upload-data', 'last_modified'),
-                dash.dependencies.State('stored-data','data'))
-
-    def update_output(list_of_contents, list_of_names, list_of_dates, store_data):
-        if list_of_contents is not None:
-            children = [
-                parse_contents(c, n, d, store_data) for c, n, d in
-                zip(list_of_contents, list_of_names, list_of_dates)]
-            return children
-    
-    ##############################
     # ------------------------------------------------------------------------------
     # set input and output dependencies
     @app.callback(
@@ -337,25 +249,19 @@ def dashboard():
         [
         dash.dependencies.Input('my-date-picker-range', 'start_date'), # zach - why positional only here?
         dash.dependencies.Input('my-date-picker-range', 'end_date'),
-        # dash.dependencies.Input(component_id='slct_pt', component_property='value'),
+        dash.dependencies.Input(component_id='slct_pt', component_property='value'),
         dash.dependencies.Input(component_id='slct_agg', component_property='value'),
         dash.dependencies.Input(component_id='slct_tme', component_property='value'),
         dash.dependencies.Input(component_id='slct_gph', component_property='value'),
         dash.dependencies.Input(component_id='slct_scl', component_property='value'),
-        dash.dependencies.Input(component_id='slct_sft', component_property='value'),
-        dash.dependencies.Input('stored-data', 'data'),
+        dash.dependencies.Input(component_id='slct_sft', component_property='value')
         ]
     )
     # --------------------------------------------------------------------------------
     # define function to control graphical outputs
-    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data):
+    def update_graph(start_date,end_date,patient,agg,time,beh_gph,scale,shift):
 
         print(shift)
-        
-        df_workbook = pd.DataFrame(data)
-        
-        #rename Target and Episode_Count columns 
-        df_workbook.rename(columns={'variable':'Target','value':'Episode_Count'},inplace=True)
         
         #NOTE; need to align final date of behavior with final date of medication
         
@@ -363,11 +269,9 @@ def dashboard():
             on specific information request and displays graphically for end user '''
 
         #select data subset by individual 
-        dfq = df_workbook
-        print(dfq)
-        
-        # print(dfq.head())
-        dfmeds = df_meds
+        dfq = df.query('Name == @patient')
+        print(dfq.head())
+        dfmeds = df_meds.query('Name == @patient')
 
         #select whether to aggrate by mean or count 
         if agg == 'mean':
@@ -389,13 +293,13 @@ def dashboard():
             date_frmt = "Year"
         
         #select shift 
-        dfq = dfq.loc[dfq['Shift'].isin(shift)]
+        dfq = dfq.loc[dfq['Time'].isin(shift)]
 
         #BEH DATA ------------------------------------------------------------------------------------------------------
         #read date range from UI and filter behavior dataset 
         flt_beh = (dfq['Date'] >= start_date) & (dfq['Date'] <= end_date)
         dfq = dfq.loc[flt_beh]
-        # print(dfq.head())
+        print(dfq.head())
         #format date variables for grouping requirements
         dfq['Year'] = pd.DatetimeIndex(dfq['Date']).year
         dfq['Month'] = pd.DatetimeIndex(dfq['Date']).month
@@ -404,7 +308,7 @@ def dashboard():
         dfq['Rolling'] = 'Rolling'
         dfq = dfq.replace('Self-injury', 'Self-Injury')
         dfq = dfq.replace('SIB', 'Self-Injury')
-        # print(dfq.head())
+        print(dfq.head())
 
         #NOTE; dataframes are aggregated here per selection of timeframe 
         #determine groupings for various graphical outputs
@@ -461,7 +365,7 @@ def dashboard():
         #if dataframe empty pass in dummy data
         if dfg.empty:        
             dfg = dfg.append({date_frmt: start_date,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
-        # print(dfg)
+        print(dfg)
         #ceate charts for behavior data
         if beh_gph == 'bar': 
             fig = px.bar(dfg, x=date_frmt, y="Episode_Count", color = "Target",
