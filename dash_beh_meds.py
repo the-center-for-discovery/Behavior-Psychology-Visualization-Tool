@@ -20,12 +20,6 @@ import numpy as np
 #setup Dash app 
 app = dash.Dash(__name__, title='Behavior Medication Dashboard', external_stylesheets=[dbc.themes.DARKLY], prevent_initial_callbacks=True)
 
-# auth = dash_auth.BasicAuth(
-#     app,
-#     {'temp': 'Disc0very21',
-#     }
-# )
-
 def dashboard():
     #import necessary files 
     pd.set_option('display.max_columns', 200)
@@ -38,10 +32,6 @@ def dashboard():
     print(path_pro[0])
     path_meds = glob.glob(dir_pro + 'tbl_Clinical_Behavior_Tracking_06_Medications_Data_*')
     df_meds = pd.read_csv(path_meds[0],dtype='unicode')
-    # path_bm = glob.glob(dir_pro + 'tbl_Clinical_BM_Menses_*')
-    # df_bm = pd.read_csv(path_bm[0],dtype='unicode')
-    # path_slp = glob.glob(dir_pro + 'tbl_Clinical_Sleep_*')
-    # df_slp = pd.read_csv(path_slp[0],dtype='unicode')
    
     #df macpro
     df = pd.read_csv(path_pro[0], dtype='unicode')
@@ -55,11 +45,6 @@ def dashboard():
         ' (' + df_meds['Unit'] + ')' #zach - why not on one line
     df_meds[['Start', 'End']] = df_meds[['Start', 'End']].apply(pd.to_datetime)
     df_meds['Dose'] = pd.to_numeric(df_meds['Dose'])
-    # df_bm['Menses'].replace({'False': 0, 'True': 1}, inplace=True)
-    # df_slp['Date'] = pd.to_datetime(df_slp['Date'])
-    # df_slp['Sleep_Hours'] = pd.to_numeric(df_slp['Sleep_Hours'])
-    # df_bm.head()
-    # df_bm['Date'] = pd.to_datetime(df_bm['Date'])
 
     print(datetime.now())
 
@@ -80,16 +65,6 @@ def dashboard():
     #------------------------------------------------------------------------
     #design layout of UI
     app.layout = html.Div([
-
-        # dcc.Interval(
-        #     id='my_interval',
-        #     disabled=False,  # if True, the counter will no longer update
-        #     interval=1*3000,  # increment the counter n_intervals every interval milliseconds
-        #     n_intervals=0,  # number of times the interval has passed
-        #     max_intervals=4,  # number of times the interval will be fired.
-        #     #if -1, then the interval has no limit (the default)
-        #     #and if 0 then the interval stops running.
-        # ),
                     #div containing labels and input functions 
                     html.Div([
                         #add CFD logo and label for resident selection
@@ -112,6 +87,7 @@ def dashboard():
                         dbc.Row(
                                 [
                                 dbc.Col(
+                                    # replace with file widget
                                     dcc.Dropdown(id="slct_pt",
                                                 options=[
                                                     {'label':i,'value':i} for i in names
@@ -254,14 +230,6 @@ def dashboard():
                         
                         ),
                     
-                    # dbc.Col(
-                    #     dcc.Textarea(
-                    #     id='text_meds',
-                    #     value='Add notes...',
-                    #     style={'width': '80%', 'height': 50},
-                    #     ),width={'size': 6, 'offset':6,},
-                    # ),
-                    
                     ]
                     ),
 
@@ -271,43 +239,6 @@ def dashboard():
                             width={'size': 10,'offset':1, 'order':1}
                         ),
                     ),
-                
-            # dcc.Tabs([
-                
-            #     dcc.Tab(label='Medication Data', children=[
-                    
-            #         dbc.Col(        
-            #             dcc.Graph(id='beh_meds_line', figure={}),
-            #             width={'size': 10,'offset':1, 'order':1}
-            #                 ),
-                        
-            #                                         ]
-            #             ),
-            #     dcc.Tab(label='BM/Menses', children=[
-                    
-            #         dbc.Col(        
-            #             dcc.Graph(id='bm_mens', figure={}),
-            #             width={'size': 10,'offset':1, 'order':1}
-            #                 ),
-                        
-            #                                         ]
-            #             ),      
-                    
-            #     dcc.Tab(label='Sleep', children=[
-                    
-            #         dbc.Col(        
-            #             dcc.Graph(id='sleep', figure={}),
-            #             width={'size': 10,'offset':1, 'order':1}
-            #                 ),
-                        
-            #                                         ]
-            #             ),      
-                    
-            #         ]),              
-                    
-                    # ),
-
-            # end of Div 
             ],
         )
     # ------------------------------------------------------------------------------
@@ -315,9 +246,7 @@ def dashboard():
     @app.callback(
         [
         dash.dependencies.Output(component_id='beh_meds_bar', component_property='figure'),
-        dash.dependencies.Output(component_id='beh_meds_line', component_property='figure'),
-        # dash.dependencies.Output(component_id='bm_mens', component_property='figure'),
-        # dash.dependencies.Output(component_id='sleep', component_property='figure')
+        dash.dependencies.Output(component_id='beh_meds_line', component_property='figure')
         ],
         [
         dash.dependencies.Input('my-date-picker-range', 'start_date'), # zach - why positional only here?
@@ -345,8 +274,6 @@ def dashboard():
         dfq = df.query('Name == @patient')
         print(dfq.head())
         dfmeds = df_meds.query('Name == @patient')
-        # dfbm = df_bm.query('Name == @patient')
-        # dfslp = df_slp.query('Name == @patient')
 
         #select whether to aggrate by mean or count 
         if agg == 'mean':
@@ -496,7 +423,6 @@ def dashboard():
         #if no medication data within daterange create null dataframe
         elif dfmeds.empty:
             dfmeds = dfmeds.append({'Name':patient,'Medication':'Null','Measure_Date_Year': start_date, 'Start':start_date, 'End':end_date, 'Dose':0}, ignore_index=True)
-        # print(dfmeds)
 
         #read date range from UI and filter medication dataset 
         flt_meds = (dfmeds['Start'] >= start_date) & (dfmeds['Start'] <= end_date)
@@ -508,53 +434,16 @@ def dashboard():
         #create chart for medication data
         if scale == 'log':
             fig2 = px.line(dfmeds, x='Start', y="Dose", color = "Medication",
-                # labels={"Episode_Count": tally + " per Shift",
-                #         "Target":"Target",
-                #         "Yr_Mnth": "Date" },
                 title="Medication Dosages: " + patient + " - " + today, log_y=True)
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
         else:
             fig2 = px.line(dfmeds, x='Start', y="Dose", color = "Medication",
-                # labels={"Episode_Count": tally + " per Shift",
-                #         "Target":"Target",
-                #         "Yr_Mnth": "Date" },
                 title="Medication Dosages: " + patient + " - " + today, log_y=False)
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
 
-        # #BM_MENS DATA ------------------------------------------------------------------------------------------------------
-        
-        # flt_bm = (dfbm['Date'] >= start_date) & (dfbm['Date'] <= end_date)
-        # dfbm = dfbm.loc[flt_bm]
-        
-        # dfbm = dfbm.groupby(['Date','BM_Bristol','Menses'])['BM_Size'].count().reset_index()
-        
-        # dfbm = dfbm.drop_duplicates(subset = ['Date','Menses'],keep='last')
-
-        # fig3 = make_subplots(specs=[[{"secondary_y": True}]])
-
-        # x = dfbm['Date']
-        # bm = dfbm['BM_Size']
-        # mn = dfbm['Menses']
-        # fig3.add_trace(go.Scatter(x=x, y=bm,name='BM'), secondary_y=False,)
-        # fig3.add_trace(go.Bar(x=x, y=mn,name='Menses'), secondary_y=True,)
-
-        # fig3.update_xaxes(tickangle=45,)
-
-        # fig3.update_yaxes(title_text="BM Frequency",secondary_y=False,rangemode = "tozero")
-        # fig3.update_yaxes(title_text="Menses",secondary_y=True,tickmode = 'array',tickvals=[0,1],ticktext = ["False","True"], )
-
-        # #SLEEP DATA ------------------------------------------------------------------------------------------------------
-        # flt_slp = (dfslp['Date'] >= start_date) & (dfslp['Date'] <= end_date)
-        # dfslp = dfslp.loc[flt_slp]
-
-        # dfslp = dfslp.groupby(['Date'])['Sleep_Hours'].mean().reset_index()
-
-        # fig4 = px.line(dfslp,x='Date', y='Sleep_Hours',)
-        # fig4.update_traces(line=dict(color="#00cc99"))
-
-        return fig, fig2 #, fig3, fig4
+        return fig, fig2
 
         # ------------------------------------------------------------------------------
 
