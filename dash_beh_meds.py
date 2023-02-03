@@ -26,7 +26,7 @@ from read_workbook import get_month_dataframe
 app = dash.Dash(__name__, title='Behavior Medication Dashboard', external_stylesheets=[dbc.themes.DARKLY], prevent_initial_callbacks=True)
 
 def dashboard():
-    #import necessary files 
+    #import necessary files here
     pd.set_option('display.max_columns', 200)
     
     #NOTE; dataframe (dfmean) needs to be passed as an input here
