@@ -30,27 +30,7 @@ def dashboard():
     pd.set_option('display.max_columns', 200)
     
     #NOTE; dataframe (dfmean) needs to be passed as an input here
-    dir_pro = '/Users/canderson/Documents/Python/warehouse_data/latest/'
-    path_pro = glob.glob(dir_pro + 'tbl_Clinical_Behavior_Tracking_01_Target_00_No_Data_*')
-    print(path_pro[0])
-    path_meds = glob.glob(dir_pro + 'tbl_Clinical_Behavior_Tracking_06_Medications_Data_*')
-    df_meds = pd.read_csv(path_meds[0],dtype='unicode')
-    df_meds = df_meds.query('Name == "Ballantine-Kaplan, Eli"')
-   
-    #df macpro
-    df = pd.read_csv(path_pro[0], dtype='unicode')
-    df = df.query('Name == "Ballantine-Kaplan, Eli"')
-    patient = "Ballantine-Kaplan, Eli"
 
-    #configure formatting of colums where necessary
-    df['Date'] = pd.to_datetime(df['Date'])
-    df['Date_Time'] = pd.to_datetime(df['Date_Time'])
-    df['Episode_Count'] = pd.to_numeric(df['Episode_Count'])
-    df_meds['Dose'] = df_meds['Dose'].str.extract('(\d+)', expand=False) #zach - what does this line do?
-    df_meds['Medication'] = df_meds['Medication'] + \
-        ' (' + df_meds['Unit'] + ')' #zach - why not on one line
-    df_meds[['Start', 'End']] = df_meds[['Start', 'End']].apply(pd.to_datetime)
-    df_meds['Dose'] = pd.to_numeric(df_meds['Dose'])
 
     print(datetime.now())
 
@@ -61,8 +41,8 @@ def dashboard():
     today_fmt = pd.to_datetime(today)
 
     #get unique list of names for individuals
-    names = list(df['Name'].unique()) #zach - why call unique
-    names = sorted(names)
+    # names = list(df['Name'].unique()) #zach - why call unique
+    # names = sorted(names)
 
     #format date variables
     year = datetime.today().strftime('%Y')
@@ -349,6 +329,7 @@ def dashboard():
     # --------------------------------------------------------------------------------
     # define function to control graphical outputs
     def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data):
+        patient = 'patient'
 
         print(shift)
         
@@ -367,7 +348,7 @@ def dashboard():
         print(dfq)
         
         # print(dfq.head())
-        dfmeds = df_meds
+        dfmeds = [] # df_meds
 
         #select whether to aggrate by mean or count 
         if agg == 'mean':
