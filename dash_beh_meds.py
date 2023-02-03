@@ -348,7 +348,7 @@ def dashboard():
         print(dfq)
         
         # print(dfq.head())
-        dfmeds = [] # df_meds
+        dfmeds = {}# df_meds
 
         #select whether to aggrate by mean or count 
         if agg == 'mean':
@@ -484,39 +484,40 @@ def dashboard():
         #MED DATA ------------------------------------------------------------------------------------------------------
         #group medication data, convert date vars to python datetime abd sort ascending
         print(patient)
-        dfmeds['End'].fillna(value = today_fmt, inplace=True)
-        dfmeds = dfmeds.groupby(['Name','Medication','Start','End'])['Dose'].sum().reset_index()
-        dfmeds.sort_values(by = 'Start' , ascending = True, inplace=True)
-        dfmeds = dfmeds.drop_duplicates(subset = ['Start','Medication'],keep='last')
+        # dfmeds['End'].fillna(value = today_fmt, inplace=True)
+        # dfmeds = dfmeds.groupby(['Name','Medication','Start','End'])['Dose'].sum().reset_index()
+        # dfmeds.sort_values(by = 'Start' , ascending = True, inplace=True)
+        # dfmeds = dfmeds.drop_duplicates(subset = ['Start','Medication'],keep='last')
 
         #create duplicate daily entries for all dosage data between start and end dates 
-        if not dfmeds.empty:
-            dfmeds = pd.concat([g.set_index('Start').reindex(pd.date_range(g['Start'].min(), g['End'].max(), freq='d'), method='ffill').reset_index().rename({'index':'Start'}, axis=1)
-                        for _, g in dfmeds.groupby(['Name','Medication','Dose'])],
-                        axis=0)
-            dfmeds.sort_values(by = ['Medication', 'Start'] , ascending = True, inplace=True)
+        # if not dfmeds.empty:
+        #     dfmeds = pd.concat([g.set_index('Start').reindex(pd.date_range(g['Start'].min(), g['End'].max(), freq='d'), method='ffill').reset_index().rename({'index':'Start'}, axis=1)
+        #                 for _, g in dfmeds.groupby(['Name','Medication','Dose'])],
+        #                 axis=0)
+        #     dfmeds.sort_values(by = ['Medication', 'Start'] , ascending = True, inplace=True)
         #if no medication data within daterange create null dataframe
-        elif dfmeds.empty:
-            dfmeds = dfmeds.append({'Name':patient,'Medication':'Null','Measure_Date_Year': start_date, 'Start':start_date, 'End':end_date, 'Dose':0}, ignore_index=True)
+        # elif dfmeds.empty:
+        #     dfmeds = dfmeds.append({'Name':patient,'Medication':'Null','Measure_Date_Year': start_date, 'Start':start_date, 'End':end_date, 'Dose':0}, ignore_index=True)
 
         #read date range from UI and filter medication dataset 
-        flt_meds = (dfmeds['Start'] >= start_date) & (dfmeds['Start'] <= end_date)
-        dfmeds = dfmeds.loc[flt_meds]
+        # flt_meds = (dfmeds['Start'] >= start_date) & (dfmeds['Start'] <= end_date)
+        # dfmeds = dfmeds.loc[flt_meds]
 
         #drop any duplicate data created and convert Dose to numeric
-        dfmeds = dfmeds.drop_duplicates(subset = ['Start','Medication'],keep='last')
+        # dfmeds = dfmeds.drop_duplicates(subset = ['Start','Medication'],keep='last')
     
         #create chart for medication data
-        if scale == 'log':
-            fig2 = px.line(dfmeds, x='Start', y="Dose", color = "Medication",
-                title="Medication Dosages: " + patient + " - " + today, log_y=True)
-            fig2.update_xaxes(tickangle=45,)
-            fig2.update_layout(template = 'plotly_white',hovermode="x unified")
-        else:
-            fig2 = px.line(dfmeds, x='Start', y="Dose", color = "Medication",
-                title="Medication Dosages: " + patient + " - " + today, log_y=False)
-            fig2.update_xaxes(tickangle=45,)
-            fig2.update_layout(template = 'plotly_white',hovermode="x unified")
+        # if scale == 'log':
+        #     fig2 = px.line(dfmeds, x='Start', y="Dose", color = "Medication",
+        #         title="Medication Dosages: " + patient + " - " + today, log_y=True)
+        #     fig2.update_xaxes(tickangle=45,)
+        #     fig2.update_layout(template = 'plotly_white',hovermode="x unified")
+        # else:
+        #     fig2 = px.line(dfmeds, x='Start', y="Dose", color = "Medication",
+        #         title="Medication Dosages: " + patient + " - " + today, log_y=False)
+        #     fig2.update_xaxes(tickangle=45,)
+        #     fig2.update_layout(template = 'plotly_white',hovermode="x unified")
+        fig2 = None
 
         return fig, fig2
 
