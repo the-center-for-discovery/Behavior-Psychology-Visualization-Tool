@@ -315,7 +315,7 @@ def dashboard():
         dash.dependencies.Output(component_id='beh_meds_line', component_property='figure')
         ],
         [
-        dash.dependencies.Input('my-date-picker-range', 'start_date'), # zach - why positional only here?
+        dash.dependencies.Input('my-date-picker-range', 'start_date'),
         dash.dependencies.Input('my-date-picker-range', 'end_date'),
         # dash.dependencies.Input(component_id='slct_pt', component_property='value'),
         dash.dependencies.Input(component_id='slct_agg', component_property='value'),
@@ -331,7 +331,7 @@ def dashboard():
     def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data):
         patient = 'patient'
 
-        print(shift)
+        print("Shift: " + str(shift))
         
         df_workbook = pd.DataFrame(data)
         
@@ -345,7 +345,7 @@ def dashboard():
 
         #select data subset by individual 
         dfq = df_workbook
-        print(dfq)
+        print("dfq = " + str(dfq))
         
         # print(dfq.head())
         dfmeds = {}# df_meds
@@ -355,7 +355,7 @@ def dashboard():
             tally = "Average"
         else:
             tally = "Count"
-        print(time)
+        print('time: ' + str(time))
         #select date format 
         if time == 'mon':
             date_frmt = "Yr_Mnth"
@@ -370,74 +370,80 @@ def dashboard():
             date_frmt = "Year"
         
         #select shift 
-        dfq = dfq.loc[dfq['Shift'].isin(shift)]
 
-        #BEH DATA ------------------------------------------------------------------------------------------------------
-        #read date range from UI and filter behavior dataset 
-        flt_beh = (dfq['Date'] >= start_date) & (dfq['Date'] <= end_date)
-        dfq = dfq.loc[flt_beh]
-        # print(dfq.head())
-        #format date variables for grouping requirements
-        dfq['Year'] = pd.DatetimeIndex(dfq['Date']).year
-        dfq['Month'] = pd.DatetimeIndex(dfq['Date']).month
-        dfq['Month_Formated'] = dfq['Month'].apply(lambda x: calendar.month_abbr[x])
-        dfq['Yr_Mnth'] = dfq['Month_Formated'] + "-" + dfq['Year'].astype(str)
-        dfq['Rolling'] = 'Rolling'
-        dfq = dfq.replace('Self-injury', 'Self-Injury')
-        dfq = dfq.replace('SIB', 'Self-Injury')
-        # print(dfq.head())
+        #don't process dfq if dfq is empty
+        if not dfq.empty:
+            dfq = dfq.loc[dfq['Shift'].isin(shift)]
 
-        #NOTE; dataframes are aggregated here per selection of timeframe 
-        #determine groupings for various graphical outputs
-        if time == 'mon' and agg == 'mean':
-            dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
-            dfg = dfm
-        elif time == 'mon' and agg == 'sum':
-            dfm = dfq.groupby(['Yr_Mnth','Time','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
-            dfg = dfm
-        else:
-            print('Process Complete')
+            #BEH DATA ------------------------------------------------------------------------------------------------------
+            #read date range from UI and filter behavior dataset 
+            flt_beh = (dfq['Date'] >= start_date) & (dfq['Date'] <= end_date)
+            dfq = dfq.loc[flt_beh]
+            # print(dfq.head())
+            #format date variables for grouping requirements
+            dfq['Year'] = pd.DatetimeIndex(dfq['Date']).year
+            dfq['Month'] = pd.DatetimeIndex(dfq['Date']).month
+            dfq['Month_Formated'] = dfq['Month'].apply(lambda x: calendar.month_abbr[x])
+            dfq['Yr_Mnth'] = dfq['Month_Formated'] + "-" + dfq['Year'].astype(str)
+            dfq['Rolling'] = 'Rolling'
+            dfq = dfq.replace('Self-injury', 'Self-Injury')
+            dfq = dfq.replace('SIB', 'Self-Injury')
+            # print(dfq.head())
 
-        if time == 'wk' and agg =='mean':
-            dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W-MON')])['Episode_Count'].mean().round(2).reset_index().sort_values('Date')
-            dfg = dfw
-        elif time == 'wk' and agg =='sum':
-            dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W-MON')])['Episode_Count'].sum().round(2).reset_index().sort_values('Date')
-            dfg = dfw
-        else:
-            print('Process Complete')    
-        
-        if time == 'day' and agg == 'mean':
-            dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
-            dfg = dfd
-            print("day: \n")
-            print(dfd.head())
-        elif time == 'day' and agg == 'sum':
-            dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
-            dfg = dfd
-        else:
-            print('Process Complete')
+            #NOTE; dataframes are aggregated here per selection of timeframe 
+            #determine groupings for various graphical outputs
+            if time == 'mon' and agg == 'mean':
+                dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
+                dfg = dfm
+            elif time == 'mon' and agg == 'sum':
+                dfm = dfq.groupby(['Yr_Mnth','Time','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
+                dfg = dfm
+            else:
+                print('Process Complete')
 
-        if time == 'shift' and agg == 'mean':
-            dfs = dfq.groupby(['Date_Time', 'Target',],sort=False,)['Episode_Count'].mean().reset_index()
-            print("shift: \n")
-            print(dfs.head())
-            dfg = dfs
-        elif time == 'shift' and agg == 'sum':
-            dfs = dfq.groupby(['Date_Time','Target',],sort=False,)['Episode_Count'].mean().reset_index()
-            dfg = dfs
-        else:
-            print('Process Complete')
+            if time == 'wk' and agg =='mean':
+                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W-MON')])['Episode_Count'].mean().round(2).reset_index().sort_values('Date')
+                dfg = dfw
+            elif time == 'wk' and agg =='sum':
+                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W-MON')])['Episode_Count'].sum().round(2).reset_index().sort_values('Date')
+                dfg = dfw
+            else:
+                print('Process Complete')    
+            
+            if time == 'day' and agg == 'mean':
+                dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
+                dfg = dfd
+                print("day: \n")
+                print(dfd.head())
+            elif time == 'day' and agg == 'sum':
+                dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
+                dfg = dfd
+            else:
+                print('Process Complete')
 
-        if time == 'roll' and agg == 'mean':
-            dfm = dfq.groupby(['Rolling','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
-            print(dfm)
-            dfg = dfm
-        elif time == 'roll' and agg == 'sum':
-            dfm = dfq.groupby(['Rolling','Target'],sort=False,)['Episode_Count'].sum().round(2).reset_index()
-            dfg = dfm
+            if time == 'shift' and agg == 'mean':
+                dfs = dfq.groupby(['Date_Time', 'Target',],sort=False,)['Episode_Count'].mean().reset_index()
+                print("shift: \n")
+                print(dfs.head())
+                dfg = dfs
+            elif time == 'shift' and agg == 'sum':
+                dfs = dfq.groupby(['Date_Time','Target',],sort=False,)['Episode_Count'].mean().reset_index()
+                dfg = dfs
+            else:
+                print('Process Complete')
+
+            if time == 'roll' and agg == 'mean':
+                dfm = dfq.groupby(['Rolling','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
+                print(dfm)
+                dfg = dfm
+            elif time == 'roll' and agg == 'sum':
+                dfm = dfq.groupby(['Rolling','Target'],sort=False,)['Episode_Count'].sum().round(2).reset_index()
+                dfg = dfm
+            else:
+                print('Process Complete')
         else:
-            print('Process Complete')
+            # when dfq is empty set dfg to be empty as well
+            dfg = dfq
 
         #if dataframe empty pass in dummy data
         if dfg.empty:        
