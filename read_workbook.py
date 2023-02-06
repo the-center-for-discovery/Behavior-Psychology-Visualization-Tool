@@ -87,3 +87,7 @@ def get_month_dataframe(workbook_xl, month):
     #get the name of the first column, which we drop
     month_to_remove = behs.columns[0]
     return behs.drop(month_to_remove, axis=1)
+
+def get_meds_data(workbook_xl):
+    df = pd.read_excel(workbook_xl, sheet_name="MEDICATIONS")
+    print(df.head(100))

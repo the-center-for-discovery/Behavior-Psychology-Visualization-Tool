@@ -70,6 +70,7 @@ def parse_contents(contents, filename, date, store_data):
         
         #run get all months function and produce behavior dataframe 
         df = get_all_months(workbook_xl)
+        get_meds_data(workbook_xl)
 
         #convert episode values to float and aggregate mean per shift 
         df['value'] = df['value'].astype(float)
@@ -109,11 +110,10 @@ def parse_contents(contents, filename, date, store_data):
               State('upload-data', 'last_modified'),
               State('stored-data','data'))
 
-def update_output(list_of_contents, list_of_names, list_of_dates, store_data):
-    if list_of_contents is not None:
+def update_output(contents, filename, date_modified, store_data):
+    if contents is not None:
         children = [
-            parse_contents(c, n, d, store_data) for c, n, d in
-            zip(list_of_contents, list_of_names, list_of_dates)]
+            parse_contents(contents, filename, date_modified, store_data)]
         return children
 
 
