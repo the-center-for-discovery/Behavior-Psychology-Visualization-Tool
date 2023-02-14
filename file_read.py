@@ -45,6 +45,7 @@ app.layout = html.Div([ # this code section taken from Dash docs https://dash.pl
         multiple=False
     ),
     html.Div(id='output-div'),
+    html.Div(id='output-meds-div'),
     html.Div(id='output-datatable'),
 ])
 
@@ -143,6 +144,23 @@ def make_graphs(data):
         print("Dataframe epmty")
     else:
         bar_fig = px.bar(df_agg, x=df_agg['Date'], y=df_agg['value'], color = 'variable',barmode='group')
+        return dcc.Graph(figure=bar_fig)
+
+
+@app.callback(Output('output-meds-div', 'children'),
+              Input('stored-meds-data','data'))
+
+def make_graphs(data):
+    
+    df_meds = pd.DataFrame(data)
+    
+    # df_agg['Date'] = pd.to_datetime(df_agg['Date'])
+    
+    if df_meds.empty:
+        print("Dataframe epmty")
+    else:
+        bar_fig = px.line(df_meds, x='Start Date', y="Dose", color = "Medication",
+                title="Medication Dosages", log_y=True)
         return dcc.Graph(figure=bar_fig)
     
 if __name__ == '__main__':
