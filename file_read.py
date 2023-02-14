@@ -70,6 +70,7 @@ def parse_contents(contents, filename, date, store_data):
         
         #run get all months function and produce behavior dataframe 
         df = get_all_months(workbook_xl)
+        #run get all meds data to produce medication dataframe
         df_meds = get_all_meds_data(workbook_xl)
         # print(str(df_meds.head()))
 
