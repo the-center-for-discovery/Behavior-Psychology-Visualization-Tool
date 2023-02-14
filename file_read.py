@@ -24,6 +24,7 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 app.layout = html.Div([ # this code section taken from Dash docs https://dash.plotly.com/dash-core-components/upload
     dcc.Store(id='stored-data', storage_type='session'),
+    dcc.Store(id='stored-meds-data', storage_type='session'),
     dcc.Upload(
         id='upload-data',
         children=html.Div([
@@ -47,11 +48,12 @@ app.layout = html.Div([ # this code section taken from Dash docs https://dash.pl
     html.Div(id='output-datatable'),
 ])
 
-def parse_contents(contents, filename, date, store_data):
+def parse_contents(contents, filename, date, store_data, store_meds_data):
     content_type, content_string = contents.split(',')
     
     decoded = base64.b64decode(content_string)
     stored_df = pd.DataFrame(store_data)
+    stored_meds_df = pd.DataFrame(store_meds_data)
     # print("YO", stored_df)
     try:
         workbook_xl = pd.ExcelFile(io.BytesIO(decoded))
@@ -72,7 +74,7 @@ def parse_contents(contents, filename, date, store_data):
         df = get_all_months(workbook_xl)
         #run get all meds data to produce medication dataframe
         df_meds = get_all_meds_data(workbook_xl)
-        # print(str(df_meds.head()))
+        df_meds = pd.concat([stored_meds_df, df_meds])
 
         #convert episode values to float and aggregate mean per shift 
         df['value'] = df['value'].astype(float)
@@ -87,6 +89,7 @@ def parse_contents(contents, filename, date, store_data):
 
     return html.Div([
         html.H5(filename),
+        html.H5("Behavior data:"),
         # html.H6(datetime.datetime.fromtimestamp(date)),
         
         dash_table.DataTable(
@@ -94,7 +97,14 @@ def parse_contents(contents, filename, date, store_data):
             columns=[{'name': i, 'id': i} for i in dfmean.columns],
             page_size=15
         ),
+        html.H5("Medication data:"),
+        dash_table.DataTable(
+            data=df_meds.to_dict('records'),
+            columns=[{'name': i, 'id': i} for i in df_meds.columns],
+            page_size=15
+        ),
         dcc.Store(id='stored-data', data=dfmean.to_dict('records')),
+        dcc.Store(id='stored-meds-data', data=df_meds.to_dict('records')),
         
         html.Hr(),  # horizontal line
 
@@ -110,12 +120,13 @@ def parse_contents(contents, filename, date, store_data):
               Input('upload-data', 'contents'),
               State('upload-data', 'filename'),
               State('upload-data', 'last_modified'),
-              State('stored-data','data'))
+              State('stored-data','data'), 
+              State('stored-meds-data','data'))
 
-def update_output(contents, filename, date_modified, store_data):
+def update_output(contents, filename, date_modified, store_data, store_meds_data):
     if contents is not None:
         children = [
-            parse_contents(contents, filename, date_modified, store_data)]
+            parse_contents(contents, filename, date_modified, store_data, store_meds_data)]
         return children
 
 

@@ -121,6 +121,7 @@ def get_med_data(workbook_xl, start_column_index=0):
     start_year_df = start_year_df.rename(columns={"Unnamed: " + str(start_column_index + 4) : "Year"})
     start_date_frames = [start_month_df, start_day_df, start_year_df]
     df_start_date = pd.concat(start_date_frames, axis=1)
+    df_start_date = df_start_date.dropna()
     df_start_date = pd.to_datetime(df_start_date)
 
     # get and format end date
@@ -132,14 +133,13 @@ def get_med_data(workbook_xl, start_column_index=0):
     end_year_df = end_year_df.rename(columns={"Unnamed: " + str(start_column_index + 7) : "Year"})
     end_date_frames = [end_month_df, end_day_df, end_year_df]
     df_end_date = pd.concat(end_date_frames, axis=1)
+    df_end_date = df_end_date.dropna()
     df_end_date = pd.to_datetime(df_end_date)
 
     # combine "start date" and "end date" into a single data frame
     df_dates = pd.DataFrame()
     df_dates["Start Date"] = df_start_date
     df_dates["End Date"] = df_end_date
-    #drop NaNs
-    df_dates = df_dates.dropna()
 
     combined_frames = [df_dose, df_dates]
     combined_df = pd.concat(combined_frames, axis=1)
