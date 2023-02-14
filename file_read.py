@@ -70,7 +70,8 @@ def parse_contents(contents, filename, date, store_data):
         
         #run get all months function and produce behavior dataframe 
         df = get_all_months(workbook_xl)
-        get_meds_data(workbook_xl)
+        df_meds = get_all_meds_data(workbook_xl)
+        # print(str(df_meds.head()))
 
         #convert episode values to float and aggregate mean per shift 
         df['value'] = df['value'].astype(float)

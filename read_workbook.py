@@ -88,6 +88,69 @@ def get_month_dataframe(workbook_xl, month):
     month_to_remove = behs.columns[0]
     return behs.drop(month_to_remove, axis=1)
 
-def get_meds_data(workbook_xl):
-    df = pd.read_excel(workbook_xl, sheet_name="MEDICATIONS")
-    print(df.head(100))
+# gets data for medication that begins on column = start_column_index
+# medications are seperated by 9 columns in the workbook, so medication 1
+# starts on column 0, medication 2 starts on column 9, etc. 
+def get_med_data(workbook_xl, start_column_index=0):
+    df_meds = pd.read_excel(workbook_xl, sheet_name="MEDICATIONS", skiprows=[0, 1])
+    df_meds_id = pd.read_excel(workbook_xl, sheet_name="MEDICATIONS", skiprows=[0, 3])
+    med_name = df_meds_id.columns[start_column_index]
+    df_meds = df_meds.drop(index=0)
+    dose = pd.DataFrame(df_meds.iloc[:,start_column_index])
+    units = pd.DataFrame(df_meds.iloc[:,start_column_index + 1])
+    dose_frames =  [dose, units]
+    df_dose = pd.concat(dose_frames, axis=1)
+    df_dose["Medication"] = med_name
+    # drop NaNs
+    df_dose = df_dose.dropna()
+    #rename columns to avoid things like "Dose.1"
+    df_dose = df_dose.rename(columns={df_dose.columns[0] : "Dose", df_dose.columns[1] : "Units"})
+    
+    # get and format start date
+    start_month_df = pd.DataFrame(df_meds.iloc[:,start_column_index + 2])
+    # deal with column names like START DATE.1
+    med_num = int(start_column_index / 9)
+    med_num_str = ""
+    if med_num > 0:
+        med_num_str = "." + str(med_num)
+
+    start_month_df = start_month_df.rename(columns={"START DATE"+med_num_str : "Month"})
+    start_day_df = pd.DataFrame(df_meds.iloc[:,start_column_index + 3])
+    start_day_df = start_day_df.rename(columns={"Unnamed: " + str(start_column_index + 3) : "Day"})
+    start_year_df = pd.DataFrame(df_meds.iloc[:,start_column_index + 4])
+    start_year_df = start_year_df.rename(columns={"Unnamed: " + str(start_column_index + 4) : "Year"})
+    start_date_frames = [start_month_df, start_day_df, start_year_df]
+    df_start_date = pd.concat(start_date_frames, axis=1)
+    df_start_date = pd.to_datetime(df_start_date)
+
+    # get and format end date
+    end_month_df = pd.DataFrame(df_meds.iloc[:,start_column_index + 5])
+    end_month_df = end_month_df.rename(columns={"END DATE"+med_num_str : "Month"})
+    end_day_df = pd.DataFrame(df_meds.iloc[:,start_column_index + 6])
+    end_day_df = end_day_df.rename(columns={"Unnamed: " + str(start_column_index + 6) : "Day"})
+    end_year_df = pd.DataFrame(df_meds.iloc[:,start_column_index + 7])
+    end_year_df = end_year_df.rename(columns={"Unnamed: " + str(start_column_index + 7) : "Year"})
+    end_date_frames = [end_month_df, end_day_df, end_year_df]
+    df_end_date = pd.concat(end_date_frames, axis=1)
+    df_end_date = pd.to_datetime(df_end_date)
+
+    # combine "start date" and "end date" into a single data frame
+    df_dates = pd.DataFrame()
+    df_dates["Start Date"] = df_start_date
+    df_dates["End Date"] = df_end_date
+    #drop NaNs
+    df_dates = df_dates.dropna()
+
+    combined_frames = [df_dose, df_dates]
+    combined_df = pd.concat(combined_frames, axis=1)
+    return combined_df
+
+# get all medication data by appending calls to the above get_med_data function
+def get_all_meds_data(workbook_xl):
+    start_column_index = 0
+    med_dfs = []
+    num_columns = len(pd.read_excel(workbook_xl, sheet_name="MEDICATIONS").columns)
+    while start_column_index < num_columns:
+        med_dfs.append(get_med_data(workbook_xl, start_column_index))
+        start_column_index += 9 # each medication is seperated by 9 columns
+    return pd.concat(med_dfs)
