@@ -542,10 +542,6 @@ def dashboard():
         else:
             dfmeds = dfmeds.append({'Medication':'Null','Date': 'None', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
         
-    
-        print('check:\n')
-        print(dfmeds.head(50))
-        print(dfmeds.shape)
         
         #create chart for medication data
         if scale == 'log':
