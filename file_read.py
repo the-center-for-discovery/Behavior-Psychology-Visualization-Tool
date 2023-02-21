@@ -154,13 +154,14 @@ def make_graphs(data):
     
     df_meds = pd.DataFrame(data)
 
-    df_meds = pd.melt(df_meds, id_vars =['Dose','Units','Medication'])
-    df_meds = df_meds.rename(columns = {'value':'Date'})
-    df_meds.sort_values(by='Date',inplace=True)
     
     if df_meds.empty:
         print("Dataframe epmty")
     else:
+        df_meds = pd.melt(df_meds, id_vars =['Dose','Units','Medication'])
+        df_meds = df_meds.rename(columns = {'value':'Date'})
+        df_meds.sort_values(by='Date',inplace=True)
+        
         bar_fig = px.line(df_meds, x='Date', y="Dose", color = "Medication",
                 title="Medication Dosages", log_y=True)
         return dcc.Graph(figure=bar_fig)
