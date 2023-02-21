@@ -71,6 +71,7 @@ def dashboard():
                                 ),
                         #row containing label and resident select
                             dcc.Store(id='stored-data', storage_type='session'),
+                            dcc.Store(id='stored-meds-data', storage_type='session'),
                             
                             dcc.Upload(
                                 id='upload-data',
@@ -254,7 +255,7 @@ def dashboard():
     
     ##############################
     
-    def parse_contents(contents, filename, date, store_data):
+    def parse_contents(contents, filename, date, store_data, store_meds_data):
         content_type, content_string = contents.split(',')
         
         decoded = base64.b64decode(content_string)
@@ -297,12 +298,14 @@ def dashboard():
                 dash.dependencies.Input('upload-data', 'contents'),
                 dash.dependencies.State('upload-data', 'filename'),
                 dash.dependencies.State('upload-data', 'last_modified'),
-                dash.dependencies.State('stored-data','data'))
+                dash.dependencies.State('stored-data','data'),
+                dash.dependencies.State('stored-meds-data','data'),
+                )
 
-    def update_output(list_of_contents, list_of_names, list_of_dates, store_data):
+    def update_output(list_of_contents, list_of_names, list_of_dates, store_data, store_meds_data):
         if list_of_contents is not None:
             children = [
-                parse_contents(c, n, d, store_data) for c, n, d in
+                parse_contents(c, n, d, store_data, store_meds_data) for c, n, d in
                 zip(list_of_contents, list_of_names, list_of_dates)]
             return children
     
@@ -324,11 +327,12 @@ def dashboard():
         dash.dependencies.Input(component_id='slct_scl', component_property='value'),
         dash.dependencies.Input(component_id='slct_sft', component_property='value'),
         dash.dependencies.Input('stored-data', 'data'),
+        dash.dependencies.Input('stored-meds-data', 'data'),
         ]
     )
     # --------------------------------------------------------------------------------
     # define function to control graphical outputs
-    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data):
+    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data, store_meds_data):
         patient = 'patient'
 
         print("Shift: " + str(shift))
