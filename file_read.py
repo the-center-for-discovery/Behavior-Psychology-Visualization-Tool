@@ -90,14 +90,14 @@ def parse_contents(contents, filename, date, store_data, store_meds_data):
 
     return html.Div([
         html.H5(filename),
-        html.H5("Behavior data:"),
-        # html.H6(datetime.datetime.fromtimestamp(date)),
         
+        html.H5("Behavior data:"),
         dash_table.DataTable(
             data=dfmean.to_dict('records'),
             columns=[{'name': i, 'id': i} for i in dfmean.columns],
             page_size=15
         ),
+        
         html.H5("Medication data:"),
         dash_table.DataTable(
             data=df_meds.to_dict('records'),
@@ -153,13 +153,15 @@ def make_graphs(data):
 def make_graphs(data):
     
     df_meds = pd.DataFrame(data)
-    
-    # df_agg['Date'] = pd.to_datetime(df_agg['Date'])
+
+    df_meds = pd.melt(df_meds, id_vars =['Dose','Units','Medication'])
+    df_meds = df_meds.rename(columns = {'value':'Date'})
+    df_meds.sort_values(by='Date',inplace=True)
     
     if df_meds.empty:
         print("Dataframe epmty")
     else:
-        bar_fig = px.line(df_meds, x='Start Date', y="Dose", color = "Medication",
+        bar_fig = px.line(df_meds, x='Date', y="Dose", color = "Medication",
                 title="Medication Dosages", log_y=True)
         return dcc.Graph(figure=bar_fig)
     
