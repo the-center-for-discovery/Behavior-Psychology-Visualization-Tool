@@ -22,6 +22,8 @@ import re
 
 from read_workbook import * 
 
+pd.options.mode.chained_assignment = None  # default='warn'
+
 #setup Dash app 
 app = dash.Dash(__name__, title='Behavior Medication Dashboard', external_stylesheets=[dbc.themes.DARKLY], prevent_initial_callbacks=True)
 
@@ -282,8 +284,8 @@ def dashboard():
             dfmean = df.groupby(['Date', 'Shift','variable'],sort=False,)['value'].mean().round(2).reset_index()
             dfmean = pd.concat([stored_df, dfmean])
 
-            df_meds = get_all_meds_data(workbook_xl)
-            df_meds = pd.concat([stored_meds_df, df_meds])
+            dfmeds = get_all_meds_data(workbook_xl)
+            dfmeds = pd.concat([stored_meds_df, dfmeds])
         
         except Exception as e:
             print(e)
@@ -293,7 +295,7 @@ def dashboard():
 
         return html.Div([
             dcc.Store(id='stored-data', data=dfmean.to_dict('records')),
-            dcc.Store(id='stored-meds-data', data=df_meds.to_dict('records'))
+            dcc.Store(id='stored-meds-data', data=dfmeds.to_dict('records'))
                         ])
 
     @app.callback(dash.dependencies.Output('output-datatable', 'children'),
@@ -339,10 +341,20 @@ def dashboard():
         print("Shift: " + str(shift))
         
         df_workbook = pd.DataFrame(data)
-        df_meds = pd.DataFrame(store_meds_data)
+        
+        # if df_workbook.empty:
+        #     df_workbook = df_workbook.append({'Shift':'Null','Date': 'Null', 'No Data':'Null','variable':'Null','value':'Null'}, ignore_index=True)
+
+        print('behavior\n')
+        df_workbook = df_workbook.dropna()
+        print(df_workbook.tail())
+        
+        dfmeds = pd.DataFrame(store_meds_data)
         
         #rename Target and Episode_Count columns 
-        df_workbook.rename(columns={'variable':'Target','value':'Episode_Count'},inplace=True)
+        if not df_workbook.empty:
+            df_workbook.rename(columns={'variable':'Target','value':'Episode_Count'},inplace=True)
+            df_workbook.sort_values(by = 'Date', inplace=True)
         
         #NOTE; need to align final date of behavior with final date of medication
         
@@ -351,14 +363,17 @@ def dashboard():
 
         #select data subset by individual 
         dfq = df_workbook
-        print("dfq = " + str(dfq))
+        # print("dfq = " + str(dfq))
         
         # print(dfq.head())
-        df_meds = pd.melt(df_meds, id_vars =['Dose','Units','Medication'])
-        df_meds = df_meds.rename(columns = {'value':'Date'})
-        df_meds.sort_values(by='Date',inplace=True)
-        dfmeds = df_meds
-
+        
+        if not dfmeds.empty:
+            dfmeds = pd.melt(dfmeds, id_vars =['Dose','Units','Medication'])
+            dfmeds = dfmeds.rename(columns = {'value':'Date'})
+            dfmeds.sort_values(by='Date',inplace=True)
+        else:
+            dfmeds = dfmeds.append({'Medication':'Null','Date': 'Null', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
+        
         #select whether to aggrate by mean or count 
         if agg == 'mean':
             tally = "Average"
@@ -499,41 +514,51 @@ def dashboard():
         #MED DATA ------------------------------------------------------------------------------------------------------
         #group medication data, convert date vars to python datetime abd sort ascending
         print(patient)
-        print("dfmeds", dfmeds)
         # dfmeds['End'].fillna(value = today_fmt, inplace=True)
         # dfmeds = dfmeds.groupby(['Name','Medication','Start','End'])['Dose'].sum().reset_index()
         # dfmeds.sort_values(by = 'Start' , ascending = True, inplace=True)
         # dfmeds = dfmeds.drop_duplicates(subset = ['Start','Medication'],keep='last')
 
         # create duplicate daily entries for all dosage data between start and end dates 
-        if not dfmeds.empty:
-            dfmeds = pd.concat([g.set_index('Start').reindex(pd.date_range(g['Start'].min(), g['End'].max(), freq='d'), method='ffill').reset_index().rename({'index':'Start'}, axis=1)
-                        for _, g in dfmeds.groupby(['Name','Medication','Dose'])],
-                        axis=0)
-            dfmeds.sort_values(by = ['Medication', 'Start'] , ascending = True, inplace=True)
-        #if no medication data within daterange create null dataframe
-        elif dfmeds.empty:
-            dfmeds = dfmeds.append({'Name':patient,'Medication':'Null','Measure_Date_Year': start_date, 'Start':start_date, 'End':end_date, 'Dose':0}, ignore_index=True)
+        # if not dfmeds.empty:
+        #     dfmeds = pd.concat([g.set_index('Start').reindex(pd.date_range(g['Start'].min(), g['End'].max(), freq='d'), method='ffill').reset_index().rename({'index':'Start'}, axis=1)
+        #                 for _, g in dfmeds.groupby(['Name','Medication','Dose'])],
+        #                 axis=0)
+        #     dfmeds.sort_values(by = ['Medication', 'Start'] , ascending = True, inplace=True)
+        # #if no medication data within daterange create null dataframe
+        # elif dfmeds.empty:
+        #     dfmeds = dfmeds.append({'Name':patient,'Medication':'Null','Measure_Date_Year': start_date, 'Start':start_date, 'End':end_date, 'Dose':0}, ignore_index=True)
 
         # read date range from UI and filter medication dataset 
-        flt_meds = (dfmeds['Start'] >= start_date) & (dfmeds['Start'] <= end_date)
-        dfmeds = dfmeds.loc[flt_meds]
+        # flt_meds = (dfmeds['Date'] >= start_date) & (dfmeds['Date'] <= end_date)
+        # dfmeds = dfmeds.loc[flt_meds]
 
         #drop any duplicate data created and convert Dose to numeric
-        dfmeds = dfmeds.drop_duplicates(subset = ['Start','Medication'],keep='last')
+        dfmeds = dfmeds.drop_duplicates(subset = ['Date','Medication'],keep='last')
+
+        dfmeds['Dose'] = dfmeds['Dose'].astype(float)
+        dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
+        end_date = df_workbook['Date'].iloc[-1]
+        
+        print(end_date)
+        
+        dfmeds['Date'] = dfmeds['Date'].fillna(end_date)
     
+        print('check:\n')
+        print(dfmeds.head(50))
+        print(dfmeds.shape)
+        
         #create chart for medication data
         if scale == 'log':
-            fig2 = px.line(dfmeds, x='Start', y="Dose", color = "Medication",
-                title="Medication Dosages: " + patient + " - " + today, log_y=True)
+            fig2 = px.line(dfmeds, x='Date', y="Dose", color = "Medication",
+                title="Medication", log_y=True)
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
         else:
-            fig2 = px.line(dfmeds, x='Start', y="Dose", color = "Medication",
-                title="Medication Dosages: " + patient + " - " + today, log_y=False)
+            fig2 = px.line(dfmeds, x='Date', y="Dose", color = "Medication",
+                title="Medication",log_y=False)
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
-        fig2 = None
 
         return fig, fig2
 
