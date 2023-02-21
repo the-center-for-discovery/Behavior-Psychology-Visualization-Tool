@@ -371,9 +371,7 @@ def dashboard():
             dfmeds = pd.melt(dfmeds, id_vars =['Dose','Units','Medication'])
             dfmeds = dfmeds.rename(columns = {'value':'Date'})
             dfmeds.sort_values(by='Date',inplace=True)
-        else:
-            dfmeds = dfmeds.append({'Medication':'Null','Date': 'Null', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
-        
+      
         #select whether to aggrate by mean or count 
         if agg == 'mean':
             tally = "Average"
@@ -534,15 +532,16 @@ def dashboard():
         # dfmeds = dfmeds.loc[flt_meds]
 
         #drop any duplicate data created and convert Dose to numeric
-        dfmeds = dfmeds.drop_duplicates(subset = ['Date','Medication'],keep='last')
+        if not dfmeds.empty:
+            dfmeds = dfmeds.drop_duplicates(subset = ['Date','Medication'],keep='last')
 
-        dfmeds['Dose'] = dfmeds['Dose'].astype(float)
-        dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
-        end_date = df_workbook['Date'].iloc[-1]
+            dfmeds['Dose'] = dfmeds['Dose'].astype(float)
+            end_date = df_workbook['Date'].iloc[-1]
+            dfmeds['Date'] = dfmeds['Date'].fillna(end_date)
+            dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
+        else:
+            dfmeds = dfmeds.append({'Medication':'Null','Date': 'None', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
         
-        print(end_date)
-        
-        dfmeds['Date'] = dfmeds['Date'].fillna(end_date)
     
         print('check:\n')
         print(dfmeds.head(50))
