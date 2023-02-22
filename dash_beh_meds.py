@@ -68,9 +68,12 @@ def dashboard():
                                 #         ),     
                                 ]
                                 ),
+                        
                         #row containing label and resident select
                             dcc.Store(id='stored-data', storage_type='session'),
                             dcc.Store(id='stored-meds-data', storage_type='session'),
+                            dcc.Store(id='stored-name', storage_type='session'),
+                            dcc.Store(id='stored-name-list', storage_type='session', data=[]),
                             
                             dcc.Upload(
                                 id='upload-data',
@@ -117,7 +120,7 @@ def dashboard():
                                                 {'label': 'Monthly', 'value': 'mon'},
                                                 {'label': 'Weekly', 'value': 'wk'},
                                                 {'label': 'Daily', 'value': 'day'},
-                                                {'label': 'Shift', 'value': 'shift'},
+                                                # {'label': 'Shift', 'value': 'shift'},
                                                 {'label': 'Rolling', 'value': 'roll'},
                                                 ],
                                             value='mon',
@@ -157,7 +160,6 @@ def dashboard():
                                             style={'margin-top': 20,},
                                             width={'size':2,'offset':2, 'order':3},
                                         ),
-                                    
                                     html.Div(id='output-container-date-picker-range'),
                                 ]
                                 ),
@@ -254,7 +256,7 @@ def dashboard():
     
     ##############################
     
-    def parse_contents(contents, filename, date, store_data, store_meds_data):
+    def parse_contents(contents, filename, date, store_data, store_meds_data,stored_name):
         content_type, content_string = contents.split(',')
         
         decoded = base64.b64decode(content_string)
@@ -263,22 +265,26 @@ def dashboard():
 
         try:
             workbook_xl = pd.ExcelFile(io.BytesIO(decoded))
-            # print(workbook_xl)
             
+            dfstudet = pd.read_excel(workbook_xl, sheet_name=2, header=None)
+            name = dfstudet.iloc[0,0]
+            print(f"name is {name}")
+
             #aggregates all months data into a single data frame
             def get_all_months(workbook_xl):
                 months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
-                xl_file = pd.ExcelFile(workbook_xl)
-                
+                xl_file = pd.ExcelFile(workbook_xl)                
                 months_data = []
+                
                 for month in months:
-                    months_data.append(get_month_dataframe(xl_file, month))
-                    # print(months_data)
+                    df_month = get_month_dataframe(xl_file, month)
+                    months_data.append(df_month)
                 return pd.concat(months_data)
             
             #run get all months function and produce behavior dataframe 
             df = get_all_months(workbook_xl)
             print(df.head())
+            
             #convert episode values to float and aggregate mean per shift 
             df['value'] = df['value'].astype(float)
             dfmean = df.groupby(['Date', 'Shift','variable'],sort=False,)['value'].mean().round(2).reset_index()
@@ -295,21 +301,24 @@ def dashboard():
 
         return html.Div([
             dcc.Store(id='stored-data', data=dfmean.to_dict('records')),
-            dcc.Store(id='stored-meds-data', data=dfmeds.to_dict('records'))
+            dcc.Store(id='stored-meds-data', data=dfmeds.to_dict('records')),
+            dcc.Store(id='stored-name', data=name)
                         ])
 
-    @app.callback(dash.dependencies.Output('output-datatable', 'children'),
+    @app.callback(
+                dash.dependencies.Output('output-datatable', 'children'),
                 dash.dependencies.Input('upload-data', 'contents'),
                 dash.dependencies.State('upload-data', 'filename'),
                 dash.dependencies.State('upload-data', 'last_modified'),
                 dash.dependencies.State('stored-data','data'),
-                dash.dependencies.State('stored-meds-data','data')
+                dash.dependencies.State('stored-meds-data','data'),
+                dash.dependencies.State('stored-name','data')
                 )
 
-    def update_output(contents, filename, date_modified, store_data, store_meds_data):
+    def update_output(contents, filename, date_modified, store_data, store_meds_data,stored_name):
         if contents is not None:
             children = [
-                parse_contents(contents, filename, date_modified, store_data, store_meds_data)]
+                parse_contents(contents, filename, date_modified, store_data, store_meds_data,stored_name)]
             return children
     
     ##############################
@@ -318,7 +327,9 @@ def dashboard():
     @app.callback(
         [
         dash.dependencies.Output(component_id='beh_meds_bar', component_property='figure'),
-        dash.dependencies.Output(component_id='beh_meds_line', component_property='figure')
+        dash.dependencies.Output(component_id='beh_meds_line', component_property='figure'),
+        dash.dependencies.Output(component_id='my-date-picker-range', component_property='start_date'),
+        dash.dependencies.Output(component_id='my-date-picker-range', component_property='end_date')
         ],
         [
         dash.dependencies.Input('my-date-picker-range', 'start_date'),
@@ -330,20 +341,29 @@ def dashboard():
         dash.dependencies.Input(component_id='slct_scl', component_property='value'),
         dash.dependencies.Input(component_id='slct_sft', component_property='value'),
         dash.dependencies.Input('stored-data', 'data'),
-        dash.dependencies.Input('stored-meds-data', 'data')
+        dash.dependencies.Input('stored-meds-data', 'data'),
+        dash.dependencies.Input('stored-name', 'data'),
+        dash.dependencies.State(component_id='stored-name-list', component_property='data')
         ]
     )
     # --------------------------------------------------------------------------------
     # define function to control graphical outputs
-    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data, store_meds_data):
-        patient = 'patient'
+    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data, store_meds_data,stored_name,stored_name_list):
+        
+        if not stored_name:
+            patient = 'patient'
+        else:
+            patient = stored_name
+        
+        print(f"stored name {stored_name}")
+        
+        stored_name_list.append(stored_name)
+        
+        print(f"list of names - {stored_name_list}")
 
         print("Shift: " + str(shift))
         
         df_workbook = pd.DataFrame(data)
-        
-        # if df_workbook.empty:
-        #     df_workbook = df_workbook.append({'Shift':'Null','Date': 'Null', 'No Data':'Null','variable':'Null','value':'Null'}, ignore_index=True)
 
         print('behavior\n')
         df_workbook = df_workbook.dropna()
@@ -354,8 +374,24 @@ def dashboard():
         #rename Target and Episode_Count columns 
         if not df_workbook.empty:
             df_workbook.rename(columns={'variable':'Target','value':'Episode_Count'},inplace=True)
-            df_workbook.sort_values(by = 'Date', inplace=True)
+            df_workbook.sort_values(by = ['Date','Target'], inplace=True)
+            
+        #get start and end from workbook
+        if not df_workbook.empty:
+            start_date_wb = df_workbook['Date'].iloc[0]
+            end_date_wb = df_workbook['Date'].iloc[-1]
+            print(str(end_date[-5:]))
+        else:
+            start_date_wb = start_date
+            end_date_wb = end_date
         
+        if not df_workbook.empty and start_date_wb == start_date_wb:
+            start_date_wb = start_date
+            end_date_wb = end_date
+            
+            # if str(end_date_wb[-5:]) != '06-30':
+            #     end_date_wb = end_date_wb
+                        
         #NOTE; need to align final date of behavior with final date of medication
         
         ''' Function that takes inputs from front end, consolidates and filters data based 
@@ -391,15 +427,15 @@ def dashboard():
         else:
             date_frmt = "Year"
         
-        #select shift 
-
+        #select shift
         #don't process dfq if dfq is empty
         if not dfq.empty:
+                            
             dfq = dfq.loc[dfq['Shift'].isin(shift)]
 
             #BEH DATA ------------------------------------------------------------------------------------------------------
             #read date range from UI and filter behavior dataset 
-            flt_beh = (dfq['Date'] >= start_date) & (dfq['Date'] <= end_date)
+            flt_beh = (dfq['Date'] >= start_date_wb) & (dfq['Date'] <= end_date_wb)
             dfq = dfq.loc[flt_beh]
             # print(dfq.head())
             #format date variables for grouping requirements
@@ -418,16 +454,18 @@ def dashboard():
                 dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
                 dfg = dfm
             elif time == 'mon' and agg == 'sum':
-                dfm = dfq.groupby(['Yr_Mnth','Time','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
+                dfm = dfq.groupby(['Yr_Mnth','Shift','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
                 dfg = dfm
             else:
                 print('Process Complete')
 
             if time == 'wk' and agg =='mean':
-                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W-MON')])['Episode_Count'].mean().round(2).reset_index().sort_values('Date')
+                dfq['Date'] = pd.to_datetime(dfq['Date'])
+                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].mean().round(2).reset_index().sort_values('Date')
                 dfg = dfw
             elif time == 'wk' and agg =='sum':
-                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W-MON')])['Episode_Count'].sum().round(2).reset_index().sort_values('Date')
+                dfq['Date'] = pd.to_datetime(dfq['Date'])
+                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].sum().round(2).reset_index().sort_values('Date')
                 dfg = dfw
             else:
                 print('Process Complete')    
@@ -443,16 +481,16 @@ def dashboard():
             else:
                 print('Process Complete')
 
-            if time == 'shift' and agg == 'mean':
-                dfs = dfq.groupby(['Date_Time', 'Target',],sort=False,)['Episode_Count'].mean().reset_index()
-                print("shift: \n")
-                print(dfs.head())
-                dfg = dfs
-            elif time == 'shift' and agg == 'sum':
-                dfs = dfq.groupby(['Date_Time','Target',],sort=False,)['Episode_Count'].mean().reset_index()
-                dfg = dfs
-            else:
-                print('Process Complete')
+            # if time == 'shift' and agg == 'mean':
+            #     dfs = dfq.groupby(['Shift', 'Target',],sort=False,)['Episode_Count'].mean().reset_index()
+            #     print("shift: \n")
+            #     print(dfs.head())
+            #     dfg = dfs
+            # elif time == 'shift' and agg == 'sum':
+            #     dfs = dfq.groupby(['Shift','Target',],sort=False,)['Episode_Count'].mean().reset_index()
+            #     dfg = dfs
+            # else:
+            #     print('Process Complete')
 
             if time == 'roll' and agg == 'mean':
                 dfm = dfq.groupby(['Rolling','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
@@ -469,7 +507,7 @@ def dashboard():
 
         #if dataframe empty pass in dummy data
         if dfg.empty:        
-            dfg = dfg.append({date_frmt: start_date,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
+            dfg = dfg.append({date_frmt: start_date_wb,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
         # print(dfg)
         #ceate charts for behavior data
         if beh_gph == 'bar': 
@@ -477,7 +515,7 @@ def dashboard():
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
-                            title="Aggregate Behavior Data: " + patient + " - " + today, barmode="group")
+                            title="Aggregate Behavior Data: " + patient, barmode="group")
             fig.update_xaxes(tickangle=45,)
             fig.update_layout(template = 'plotly_white',hovermode="x unified")
         elif beh_gph == 'line':
@@ -485,7 +523,7 @@ def dashboard():
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
-                            title="Aggregate Behavior Data: " + patient + " - " + today,)
+                            title="Aggregate Behavior Data: " + patient)
             fig.update_xaxes(tickangle=45,)
             fig.update_layout(template = 'plotly_white',hovermode="x unified")
         elif beh_gph =='ols':
@@ -495,7 +533,7 @@ def dashboard():
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
-                            trendline="ols", title="Aggregate Behavior Data: " + patient + " - " + today)
+                            trendline="ols", title="Aggregate Behavior Data: " + patient)
             fig.update_xaxes(tickangle=45,)
             fig.update_layout(template = 'plotly_white',hovermode="x unified")
         else:
@@ -505,9 +543,11 @@ def dashboard():
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
-                            trendline="lowess", title="Aggregate Behavior Data: " + patient + " - " + today)
+                            trendline="lowess", title="Aggregate Behavior Data: " + patient)
             fig.update_xaxes(tickangle=45,)
             fig.update_layout(template = 'plotly_white',hovermode="x unified")
+
+
 
         #MED DATA ------------------------------------------------------------------------------------------------------
         #group medication data, convert date vars to python datetime abd sort ascending
@@ -527,21 +567,19 @@ def dashboard():
         # elif dfmeds.empty:
         #     dfmeds = dfmeds.append({'Name':patient,'Medication':'Null','Measure_Date_Year': start_date, 'Start':start_date, 'End':end_date, 'Dose':0}, ignore_index=True)
 
-        # read date range from UI and filter medication dataset 
-        # flt_meds = (dfmeds['Date'] >= start_date) & (dfmeds['Date'] <= end_date)
-        # dfmeds = dfmeds.loc[flt_meds]
-
         #drop any duplicate data created and convert Dose to numeric
         if not dfmeds.empty:
             dfmeds = dfmeds.drop_duplicates(subset = ['Date','Medication'],keep='last')
 
             dfmeds['Dose'] = dfmeds['Dose'].astype(float)
-            end_date = df_workbook['Date'].iloc[-1]
-            dfmeds['Date'] = dfmeds['Date'].fillna(end_date)
+            dfmeds['Date'] = dfmeds['Date'].fillna(end_date_wb)
             dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
         else:
             dfmeds = dfmeds.append({'Medication':'Null','Date': 'None', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
         
+        # read date range from UI and filter medication dataset 
+        flt_meds = (dfmeds['Date'] >= start_date_wb) & (dfmeds['Date'] <= end_date_wb)
+        dfmeds = dfmeds.loc[flt_meds]
         
         #create chart for medication data
         if scale == 'log':
@@ -549,13 +587,13 @@ def dashboard():
                 title="Medication", log_y=True)
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
-        else:
+        else: 
             fig2 = px.line(dfmeds, x='Date', y="Dose", color = "Medication",
                 title="Medication",log_y=False)
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
-
-        return fig, fig2
+            
+        return fig, fig2, start_date_wb, end_date_wb
 
         # ------------------------------------------------------------------------------
 
@@ -564,5 +602,5 @@ dashboard()
 print("\nComplete! \n")
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
-    # app.run_server(host='10.1.84.77', port=8050)
+    # app.run_server(debug=True)
+    app.run_server(host='10.1.183.58', port=8050)

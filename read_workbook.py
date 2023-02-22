@@ -15,11 +15,16 @@ def get_month_dataframe(workbook_xl, month):
 
     #read in necessary sheets 
     df = pd.read_excel(workbook_xl, sheet_name=month, skiprows=[1,2])
-    dfyr = pd.read_excel(workbook_xl, sheet_name=0)
-
+    dfinfo = pd.read_excel(workbook_xl, sheet_name=0)
+    dfstudet = pd.read_excel(workbook_xl, sheet_name=2, header=None)
+    
     #get years variable 
-    year = dfyr.iloc[3,1]
+    year = dfinfo.iloc[3,1]
     year1, year2 = str.split(year, '-')
+    
+    #get name
+    # name = dfstudet.iloc[0,0]
+    # print(f"name is {name}")
     
     # pdb.set_trace()
     #select necessary columns and front fill NaNs in month column 
