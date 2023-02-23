@@ -283,7 +283,6 @@ def dashboard():
             
             #run get all months function and produce behavior dataframe 
             df = get_all_months(workbook_xl)
-            print(df.head())
             
             #convert episode values to float and aggregate mean per shift 
             df['value'] = df['value'].astype(float)
@@ -360,14 +359,9 @@ def dashboard():
         stored_name_list.append(stored_name)
         
         print(f"list of names - {stored_name_list}")
-
-        print("Shift: " + str(shift))
         
         df_workbook = pd.DataFrame(data)
-
-        print('behavior\n')
         df_workbook = df_workbook.dropna()
-        print(df_workbook.tail())
         
         dfmeds = pd.DataFrame(store_meds_data)
         
@@ -380,7 +374,6 @@ def dashboard():
         if not df_workbook.empty:
             start_date_wb = df_workbook['Date'].iloc[0]
             end_date_wb = df_workbook['Date'].iloc[-1]
-            print(str(end_date[-5:]))
         else:
             start_date_wb = start_date
             end_date_wb = end_date
@@ -399,9 +392,6 @@ def dashboard():
 
         #select data subset by individual 
         dfq = df_workbook
-        # print("dfq = " + str(dfq))
-        
-        # print(dfq.head())
         
         if not dfmeds.empty:
             dfmeds = pd.melt(dfmeds, id_vars =['Dose','Units','Medication'])
@@ -413,7 +403,7 @@ def dashboard():
             tally = "Average"
         else:
             tally = "Count"
-        print('time: ' + str(time))
+        # print('time: ' + str(time))
         #select date format 
         if time == 'mon':
             date_frmt = "Yr_Mnth"
@@ -574,6 +564,12 @@ def dashboard():
             dfmeds['Dose'] = dfmeds['Dose'].astype(float)
             dfmeds['Date'] = dfmeds['Date'].fillna(end_date_wb)
             dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
+            
+            #front fill dosage data 
+            def expand_dates(ser):
+                return pd.DataFrame({'Date': pd.date_range(ser['Date'].min(), date.today(), freq='D')})
+
+            dfmeds = dfmeds.groupby(['Medication']).apply(expand_dates).reset_index().merge(dfmeds, how='left')[['Medication', 'Date', 'Dose']].ffill()
         else:
             dfmeds = dfmeds.append({'Medication':'Null','Date': 'None', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
         
@@ -603,4 +599,9 @@ print("\nComplete! \n")
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+    
+    #Conor's Mac
     # app.run_server(host='10.1.183.58', port=8050)
+    
+    #Mac Pro
+    # app.run_server(host='10.1.84.68', port=8050)
