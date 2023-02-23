@@ -228,7 +228,7 @@ def dashboard():
                 dcc.RadioItems(
                         id = 'slct_scl',
                         options=[
-                            {'label': 'Medication Data - Log Scale   ', 'value': 'log'},
+                            {'label': 'Medication Data - Logarithmic Scale   ', 'value': 'log'},
                             {'label': 'Medication Data - Linear Scale', 'value': 'lin'},
                         ],
                         value='log',
@@ -509,7 +509,7 @@ def dashboard():
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
-                            title="Aggregate Behavior Data: " + patient, barmode="group")
+                            title="Behavior Data: " + patient, barmode="group")
             fig.update_xaxes(tickangle=45,)
             fig.update_layout(template = 'plotly_white',hovermode="x unified")
         elif beh_gph == 'line':
@@ -517,7 +517,7 @@ def dashboard():
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
-                            title="Aggregate Behavior Data: " + patient)
+                            title="Behavior Data: " + patient)
             fig.update_xaxes(tickangle=45,)
             fig.update_layout(template = 'plotly_white',hovermode="x unified")
         elif beh_gph =='ols':
@@ -527,7 +527,7 @@ def dashboard():
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
-                            trendline="ols", title="Aggregate Behavior Data: " + patient)
+                            trendline="ols", title="Behavior Data: " + patient)
             fig.update_xaxes(tickangle=45,)
             fig.update_layout(template = 'plotly_white',hovermode="x unified")
         
@@ -538,7 +538,7 @@ def dashboard():
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
-                            trendline="lowess", trendline_options=dict(frac=0.1), title="Aggregate Behavior Data: " + patient)
+                            trendline="lowess", trendline_options=dict(frac=0.1), title="Behavior Data: " + patient)
             fig.update_xaxes(tickangle=45,)
             fig.update_layout(template = 'plotly_white',hovermode="x")
 
@@ -567,6 +567,8 @@ def dashboard():
             dfmeds['Dose'] = dfmeds['Dose'].astype(float)
             dfmeds['Date'] = dfmeds['Date'].fillna(end_date_wb)
             dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
+            dfmeds['Medication'] = dfmeds['Medication'] + " (" + dfmeds['Units'] + ")"
+            print(dfmeds.head())
             
             #front fill dosage data 
             def expand_dates(ser):
@@ -583,12 +585,12 @@ def dashboard():
         #create chart for medication data
         if scale == 'log':
             fig2 = px.line(dfmeds, x='Date', y="Dose", color = "Medication",
-                title="Medication", log_y=True)
+                title="Medication Data", log_y=True)
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
         else: 
             fig2 = px.line(dfmeds, x='Date', y="Dose", color = "Medication",
-                title="Medication",log_y=False)
+                title="Medication Data",log_y=False)
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
             
