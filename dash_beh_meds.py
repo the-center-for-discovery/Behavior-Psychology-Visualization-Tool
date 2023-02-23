@@ -414,9 +414,13 @@ def dashboard():
             #format date variables for grouping requirements
             dfq['Year'] = pd.DatetimeIndex(dfq['Date']).year
             dfq['Month'] = pd.DatetimeIndex(dfq['Date']).month
+            dfq['Yr_Mnth'] = pd.to_datetime(dfq['Date']).dt.strftime('%Y-%m')
             dfq['Month_Formated'] = dfq['Month'].apply(lambda x: calendar.month_abbr[x])
-            dfq['Yr_Mnth'] = dfq['Month_Formated'] + "-" + dfq['Year'].astype(str)
+            # dfq['Yr_Mnth'] = dfq['Month_Formated'] + "-" + dfq['Year'].astype(str)
             dfq['Rolling'] = 'Rolling'
+            
+            print(dfq.head())
+            print(dfq.dtypes)
             dfq = dfq.replace('Self-injury', 'Self-Injury')
             dfq = dfq.replace('SIB', 'Self-Injury')
             # print(dfq.head())
@@ -426,11 +430,11 @@ def dashboard():
             if time == 'mon' and agg == 'mean':
                 dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
                 dfg = dfm
-                # dfg.sort_values(by = ['Target'], inplace=True)
+                dfg.sort_values(by = ['Yr_Mnth','Target'], inplace=True)
             elif time == 'mon' and agg == 'sum':
                 dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
                 dfg = dfm
-                # dfg.sort_values(by = ['Target'], inplace=True)
+                dfg.sort_values(by = ['Yr_Mnth','Target'], inplace=True)
             else:
                 print('Process Complete')
             if time == 'wk' and agg =='mean':
@@ -481,7 +485,7 @@ def dashboard():
             fig = px.bar(dfg, x=date_frmt, y="Episode_Count", color = "Target",
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
-                                    "Yr_Mnth": "Date" },
+                                    "Yr_Mnth": "Date"},
                             title="Behavior and Medication Data: " + patient, barmode="group")
             fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
             fig.update_layout(
@@ -498,7 +502,7 @@ def dashboard():
             fig = px.line(dfg, x=date_frmt, y="Episode_Count", color = "Target",
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
-                                    "Yr_Mnth": "Date" },
+                                    "Yr_Mnth": "Date"},
                             title="Behavior and Medication Data: " + patient)
             fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
             fig.update_layout(
@@ -517,7 +521,7 @@ def dashboard():
             fig = px.scatter(dfg, x=date_frmt, y="Episode_Count", color = "Target",
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
-                                    "Yr_Mnth": "Date" },
+                                    "Yr_Mnth": "Date"},
                             trendline="ols", title="Behavior and Medication Data: " + patient)
             fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
             fig.update_layout(
@@ -536,8 +540,7 @@ def dashboard():
             print(dfg)
             fig = px.scatter(dfg, x=date_frmt, y="Episode_Count", color = "Target",
                             labels={"Episode_Count": tally + " per Shift",
-                                    "Target":"Target",
-                                    "Yr_Mnth": "Date" },
+                                    "Target":"Target",},
                             trendline="lowess", trendline_options=dict(frac=0.1), title="Behavior and Medication Data: " + patient)
             fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
             fig.update_layout(
