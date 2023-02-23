@@ -426,41 +426,45 @@ def dashboard():
             if time == 'mon' and agg == 'mean':
                 dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
                 dfg = dfm
+                # dfg.sort_values(by = ['Target'], inplace=True)
             elif time == 'mon' and agg == 'sum':
                 dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
                 dfg = dfm
+                # dfg.sort_values(by = ['Target'], inplace=True)
             else:
                 print('Process Complete')
             if time == 'wk' and agg =='mean':
                 dfq['Date'] = pd.to_datetime(dfq['Date'])
                 dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].mean().round(2).reset_index().sort_values('Date')
-                dfw.sort_values(by = ['Date','Target'], inplace=True)
                 dfg = dfw
+                dfg.sort_values(by = ['Date','Target'], inplace=True)
             elif time == 'wk' and agg =='sum':
                 dfq['Date'] = pd.to_datetime(dfq['Date'])
                 dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].sum().round(2).reset_index().sort_values('Date')
                 dfg = dfw
+                dfg.sort_values(by = ['Date','Target'], inplace=True)
             else:
                 print('Process Complete')
             
             if time == 'day' and agg == 'mean':
                 dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
                 dfg = dfd
-                print("day: \n")
-                print(dfd.head())
+                dfg.sort_values(by = ['Date','Target'], inplace=True)
             elif time == 'day' and agg == 'sum':
                 dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
                 dfg = dfd
+                dfg.sort_values(by = ['Date','Target'], inplace=True)
             else:
                 print('Process Complete')
 
             if time == 'roll' and agg == 'mean':
                 dfm = dfq.groupby(['Rolling','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
-                print(dfm)
                 dfg = dfm
+                dfg.sort_values(by = ['Target'], inplace=True)
             elif time == 'roll' and agg == 'sum':
                 dfm = dfq.groupby(['Rolling','Target'],sort=False,)['Episode_Count'].sum().round(2).reset_index()
                 dfg = dfm
+                dfg.sort_values(by = ['Target'], inplace=True)
             else:
                 print('Process Complete')
         else:
@@ -479,7 +483,7 @@ def dashboard():
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
                             title="Behavior and Medication Data: " + patient, barmode="group")
-            fig.update_xaxes(tickangle=45, ticks="outside", ticklen=30,tickcolor='white')
+            fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
             fig.update_layout(
                             template = 'plotly_white',hovermode="x unified",
                             legend=dict(
@@ -496,8 +500,17 @@ def dashboard():
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
                             title="Behavior and Medication Data: " + patient)
-            fig.update_xaxes(tickangle=45,)
-            fig.update_layout(template = 'plotly_white',hovermode="x unified")
+            fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
+            fig.update_layout(
+                            template = 'plotly_white',hovermode="x unified",
+                            legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=1.02,
+                            xanchor="right",
+                            x=1),
+                            xaxis_title=None
+                              ),
         elif beh_gph =='ols':
             dfg[date_frmt] = pd.to_datetime(dfg[date_frmt])
             print(dfg)
@@ -506,8 +519,17 @@ def dashboard():
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
                             trendline="ols", title="Behavior and Medication Data: " + patient)
-            fig.update_xaxes(tickangle=45,)
-            fig.update_layout(template = 'plotly_white',hovermode="x unified")
+            fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
+            fig.update_layout(
+                            template = 'plotly_white',hovermode="x unified",
+                            legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=1.02,
+                            xanchor="right",
+                            x=1),
+                            xaxis_title=None
+                              ),
         
         else:
             dfg[date_frmt] = pd.to_datetime(dfg[date_frmt])
@@ -517,8 +539,17 @@ def dashboard():
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
                             trendline="lowess", trendline_options=dict(frac=0.1), title="Behavior and Medication Data: " + patient)
-            fig.update_xaxes(tickangle=45,)
-            fig.update_layout(template = 'plotly_white',hovermode="x")
+            fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
+            fig.update_layout(
+                            template = 'plotly_white',hovermode="x unified",
+                            legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=1.02,
+                            xanchor="right",
+                            x=1),
+                            xaxis_title=None
+                              ),
 
         #MED DATA ------------------------------------------------------------------------------------------------------
         #group medication data, convert date vars to python datetime abd sort ascending
