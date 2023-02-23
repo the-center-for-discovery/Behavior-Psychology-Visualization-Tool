@@ -359,18 +359,19 @@ def dashboard():
         stored_name_list.append(stored_name)
         
         print(f"list of names - {stored_name_list}")
-        
+    
+        #covert workbooks to dataframes     
         df_workbook = pd.DataFrame(data)
-        df_workbook = df_workbook.dropna()
-
-        df_workbook = df_workbook[df_workbook["variable"].str.contains("Insert") == False]
-        
         dfmeds = pd.DataFrame(store_meds_data)
         
         #rename Target and Episode_Count columns 
         if not df_workbook.empty:
             df_workbook.rename(columns={'variable':'Target','value':'Episode_Count'},inplace=True)
             df_workbook.sort_values(by = ['Date','Target'], inplace=True)
+            
+            #clean behavior data 
+            df_workbook = df_workbook.dropna()
+            df_workbook = df_workbook[df_workbook["Target"].str.contains("Insert") == False]
             
         #get start and end from workbook
         if not df_workbook.empty:
@@ -453,6 +454,7 @@ def dashboard():
             if time == 'wk' and agg =='mean':
                 dfq['Date'] = pd.to_datetime(dfq['Date'])
                 dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].mean().round(2).reset_index().sort_values('Date')
+                dfw.sort_values(by = ['Date','Target'], inplace=True)
                 dfg = dfw
             elif time == 'wk' and agg =='sum':
                 dfq['Date'] = pd.to_datetime(dfq['Date'])
@@ -499,6 +501,7 @@ def dashboard():
         #if dataframe empty pass in dummy data
         if dfg.empty:        
             dfg = dfg.append({date_frmt: start_date_wb,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
+        
         # print(dfg)
         #ceate charts for behavior data
         if beh_gph == 'bar': 
