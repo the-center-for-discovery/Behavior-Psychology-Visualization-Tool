@@ -362,6 +362,8 @@ def dashboard():
         
         df_workbook = pd.DataFrame(data)
         df_workbook = df_workbook.dropna()
+
+        df_workbook = df_workbook[df_workbook["variable"].str.contains("Insert") == False]
         
         dfmeds = pd.DataFrame(store_meds_data)
         
@@ -444,11 +446,10 @@ def dashboard():
                 dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
                 dfg = dfm
             elif time == 'mon' and agg == 'sum':
-                dfm = dfq.groupby(['Yr_Mnth','Shift','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
+                dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
                 dfg = dfm
             else:
                 print('Process Complete')
-
             if time == 'wk' and agg =='mean':
                 dfq['Date'] = pd.to_datetime(dfq['Date'])
                 dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].mean().round(2).reset_index().sort_values('Date')
@@ -458,7 +459,7 @@ def dashboard():
                 dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].sum().round(2).reset_index().sort_values('Date')
                 dfg = dfw
             else:
-                print('Process Complete')    
+                print('Process Complete')
             
             if time == 'day' and agg == 'mean':
                 dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
@@ -526,6 +527,7 @@ def dashboard():
                             trendline="ols", title="Aggregate Behavior Data: " + patient)
             fig.update_xaxes(tickangle=45,)
             fig.update_layout(template = 'plotly_white',hovermode="x unified")
+        
         else:
             dfg[date_frmt] = pd.to_datetime(dfg[date_frmt])
             print(dfg)
@@ -533,11 +535,9 @@ def dashboard():
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
                                     "Yr_Mnth": "Date" },
-                            trendline="lowess", title="Aggregate Behavior Data: " + patient)
+                            trendline="lowess", trendline_options=dict(frac=0.1), title="Aggregate Behavior Data: " + patient)
             fig.update_xaxes(tickangle=45,)
-            fig.update_layout(template = 'plotly_white',hovermode="x unified")
-
-
+            fig.update_layout(template = 'plotly_white',hovermode="x")
 
         #MED DATA ------------------------------------------------------------------------------------------------------
         #group medication data, convert date vars to python datetime abd sort ascending
