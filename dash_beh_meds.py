@@ -2,12 +2,12 @@ import dash # v 1.16.2
 import dash_bootstrap_components as dbc
 from dash import dcc
 from dash import html  # v 1.1.1
-# import dash_auth
+
 import base64
 import calendar
 import datetime
 from datetime import date, datetime, timedelta
-# from datetime import *
+
 import time 
 from flask import Flask
 import glob
@@ -30,8 +30,6 @@ app = dash.Dash(__name__, title='Behavior Medication Dashboard', external_styles
 def dashboard():
     #import necessary files here
     pd.set_option('display.max_columns', 200)
-    
-    #NOTE; dataframe (dfmean) needs to be passed as an input here
 
     #get date
     # Textual month, day and year
@@ -39,14 +37,11 @@ def dashboard():
     today = today.strftime("%B %d, %Y")
     today_fmt = pd.to_datetime(today)
 
-    #get unique list of names for individuals
-    # names = list(df['Name'].unique()) #zach - why call unique
-    # names = sorted(names)
-
     #format date variables
     year = date.today().strftime('%Y')
     month = date.today().strftime('%m')
     day = date.today().strftime('%d')
+    
     #------------------------------------------------------------------------
     #design layout of UI
     app.layout = html.Div([
@@ -60,12 +55,6 @@ def dashboard():
                                     style={'margin-top':20,'margin-left':20,'margin-bottom':0},
                                     width={'size': 6,'offset':0, 'order':1},
                                         ),    
-                                
-                                # dbc.Col(
-                                #     html.Label('Select Resident'), 
-                                #     style={'font-size': '18px','margin-top': 10,'margin-bottom':0},
-                                #     width={'size': 2,'offset':9, 'order':3},
-                                #         ),     
                                 ]
                                 ),
                         
@@ -224,7 +213,17 @@ def dashboard():
 
             dbc.Row(
                 [
-                dbc.Col(
+                    
+            dbc.Row(
+                    dbc.Col(
+                    dcc.Graph(id='beh_meds_line',figure={}),
+                            width={'size': 10,'offset':1, 'order':1}
+                        ),
+                    ),
+            html.Div(id='output-div'),
+            html.Div(id='output-datatable'),
+            
+            dbc.Col(
                 dcc.RadioItems(
                         id = 'slct_scl',
                         options=[
@@ -242,15 +241,6 @@ def dashboard():
                     ]
                     ),
 
-            dbc.Row(
-                    dbc.Col(
-                    dcc.Graph(id='beh_meds_line',figure={}),
-                            width={'size': 10,'offset':1, 'order':1}
-                        ),
-                    ),
-            html.Div(id='output-div'),
-            html.Div(id='output-datatable'),
-            
             ],
         )
     
@@ -377,17 +367,11 @@ def dashboard():
         if not df_workbook.empty:
             start_date_wb = df_workbook['Date'].iloc[0]
             end_date_wb = df_workbook['Date'].iloc[-1]
+           
         else:
             start_date_wb = start_date
             end_date_wb = end_date
-        
-        if not df_workbook.empty and start_date_wb == start_date_wb:
-            start_date_wb = start_date
-            end_date_wb = end_date
-            
-            # if str(end_date_wb[-5:]) != '06-30':
-            #     end_date_wb = end_date_wb
-                        
+           
         #NOTE; need to align final date of behavior with final date of medication
         
         ''' Function that takes inputs from front end, consolidates and filters data based 
@@ -395,11 +379,7 @@ def dashboard():
 
         #select data subset by individual 
         dfq = df_workbook
-        
-        if not dfmeds.empty:
-            dfmeds = pd.melt(dfmeds, id_vars =['Dose','Units','Medication'])
-            dfmeds = dfmeds.rename(columns = {'value':'Date'})
-            dfmeds.sort_values(by='Date',inplace=True)
+
       
         #select whether to aggrate by mean or count 
         if agg == 'mean':
@@ -474,17 +454,6 @@ def dashboard():
             else:
                 print('Process Complete')
 
-            # if time == 'shift' and agg == 'mean':
-            #     dfs = dfq.groupby(['Shift', 'Target',],sort=False,)['Episode_Count'].mean().reset_index()
-            #     print("shift: \n")
-            #     print(dfs.head())
-            #     dfg = dfs
-            # elif time == 'shift' and agg == 'sum':
-            #     dfs = dfq.groupby(['Shift','Target',],sort=False,)['Episode_Count'].mean().reset_index()
-            #     dfg = dfs
-            # else:
-            #     print('Process Complete')
-
             if time == 'roll' and agg == 'mean':
                 dfm = dfq.groupby(['Rolling','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
                 print(dfm)
@@ -511,7 +480,16 @@ def dashboard():
                                     "Yr_Mnth": "Date" },
                             title="Behavior Data: " + patient, barmode="group")
             fig.update_xaxes(tickangle=45,)
-            fig.update_layout(template = 'plotly_white',hovermode="x unified")
+            fig.update_layout(
+                            template = 'plotly_white',hovermode="x unified",
+                            legend=dict(
+                            orientation="h",
+                            yanchor="bottom",
+                            y=1.02,
+                            xanchor="right",
+                            x=1),
+                            xaxis_title=None
+                              ),
         elif beh_gph == 'line':
             fig = px.line(dfg, x=date_frmt, y="Episode_Count", color = "Target",
                             labels={"Episode_Count": tally + " per Shift",
@@ -545,30 +523,18 @@ def dashboard():
         #MED DATA ------------------------------------------------------------------------------------------------------
         #group medication data, convert date vars to python datetime abd sort ascending
         print(patient)
-        # dfmeds['End'].fillna(value = today_fmt, inplace=True)
-        # dfmeds = dfmeds.groupby(['Name','Medication','Start','End'])['Dose'].sum().reset_index()
-        # dfmeds.sort_values(by = 'Start' , ascending = True, inplace=True)
-        # dfmeds = dfmeds.drop_duplicates(subset = ['Start','Medication'],keep='last')
-
-        # create duplicate daily entries for all dosage data between start and end dates 
-        # if not dfmeds.empty:
-        #     dfmeds = pd.concat([g.set_index('Start').reindex(pd.date_range(g['Start'].min(), g['End'].max(), freq='d'), method='ffill').reset_index().rename({'index':'Start'}, axis=1)
-        #                 for _, g in dfmeds.groupby(['Name','Medication','Dose'])],
-        #                 axis=0)
-        #     dfmeds.sort_values(by = ['Medication', 'Start'] , ascending = True, inplace=True)
-        # #if no medication data within daterange create null dataframe
-        # elif dfmeds.empty:
-        #     dfmeds = dfmeds.append({'Name':patient,'Medication':'Null','Measure_Date_Year': start_date, 'Start':start_date, 'End':end_date, 'Dose':0}, ignore_index=True)
-
         #drop any duplicate data created and convert Dose to numeric
         if not dfmeds.empty:
+            dfmeds = pd.melt(dfmeds, id_vars =['Dose','Units','Medication'])
+            dfmeds = dfmeds.rename(columns = {'value':'Date'})
+            dfmeds.sort_values(by='Date',inplace=True)
+            
             dfmeds = dfmeds.drop_duplicates(subset = ['Date','Medication'],keep='last')
 
             dfmeds['Dose'] = dfmeds['Dose'].astype(float)
             dfmeds['Date'] = dfmeds['Date'].fillna(end_date_wb)
             dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
             dfmeds['Medication'] = dfmeds['Medication'] + " (" + dfmeds['Units'] + ")"
-            print(dfmeds.head())
             
             #front fill dosage data 
             def expand_dates(ser):
@@ -587,13 +553,26 @@ def dashboard():
             fig2 = px.line(dfmeds, x='Date', y="Dose", color = "Medication",
                 title="Medication Data", log_y=True)
             fig2.update_xaxes(tickangle=45,)
-            fig2.update_layout(template = 'plotly_white',hovermode="x unified")
+            fig2.update_layout(
+                                template = 'plotly_white',hovermode="x unified",
+                                legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=1.02,
+                                xanchor="right",
+                                x=1),
+                                xaxis={'visible': False, 'showticklabels': False}
+                              )
         else: 
             fig2 = px.line(dfmeds, x='Date', y="Dose", color = "Medication",
                 title="Medication Data",log_y=False)
             fig2.update_xaxes(tickangle=45,)
             fig2.update_layout(template = 'plotly_white',hovermode="x unified")
-            
+        
+        if not df_workbook.empty and start_date_wb == start_date_wb:
+            start_date_wb = start_date
+            end_date_wb = end_date
+        
         return fig, fig2, start_date_wb, end_date_wb
 
         # ------------------------------------------------------------------------------
@@ -608,5 +587,5 @@ if __name__ == '__main__':
     #Conor's Mac
     # app.run_server(host='10.1.183.58', port=8050)
     
-    #Mac Pro
+    #Mac Pro0
     # app.run_server(host='10.1.84.68', port=8050)
