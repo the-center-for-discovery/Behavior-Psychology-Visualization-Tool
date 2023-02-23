@@ -580,7 +580,7 @@ def dashboard():
         # read date range from UI and filter medication dataset 
         flt_meds = (dfmeds['Date'] >= start_date_wb) & (dfmeds['Date'] <= end_date_wb)
         dfmeds = dfmeds.loc[flt_meds]
-        
+
         #create chart for medication data
         if scale == 'log':
             fig2 = px.line(dfmeds, x='Date', y="Dose", color = "Medication",
@@ -602,5 +602,5 @@ dashboard()
 print("\nComplete! \n")
 
 if __name__ == '__main__':
-    # app.run_server(debug=True)
-    app.run_server(host='10.1.183.58', port=8050)
+    app.run_server(debug=True)
+    # app.run_server(host='10.1.183.58', port=8050)
