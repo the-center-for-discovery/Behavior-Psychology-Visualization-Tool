@@ -419,8 +419,9 @@ def dashboard():
             # dfq['Yr_Mnth'] = dfq['Month_Formated'] + "-" + dfq['Year'].astype(str)
             dfq['Rolling'] = 'Rolling'
             
-            print(dfq.head())
-            print(dfq.dtypes)
+            #refactor and filer out erroneous target naming 
+            dfq = dfq[~dfq['Target'].str.isdecimal()]
+            dfq = dfq[~(dfq == 0).any(axis=1)]
             dfq = dfq.replace('Self-injury', 'Self-Injury')
             dfq = dfq.replace('SIB', 'Self-Injury')
             # print(dfq.head())
