@@ -342,7 +342,7 @@ def dashboard():
         if not stored_name:
             patient = 'patient'
         else:
-            patient = stored_name
+            patient = f"<b>{stored_name}</b>"
         
         print(f"stored name {stored_name}")
         
@@ -380,7 +380,6 @@ def dashboard():
         #select data subset by individual 
         dfq = df_workbook
 
-      
         #select whether to aggrate by mean or count 
         if agg == 'mean':
             tally = "Average"
@@ -416,7 +415,6 @@ def dashboard():
             dfq['Month'] = pd.DatetimeIndex(dfq['Date']).month
             dfq['Yr_Mnth'] = pd.to_datetime(dfq['Date']).dt.strftime('%Y-%m')
             dfq['Month_Formated'] = dfq['Month'].apply(lambda x: calendar.month_abbr[x])
-            # dfq['Yr_Mnth'] = dfq['Month_Formated'] + "-" + dfq['Year'].astype(str)
             dfq['Rolling'] = 'Rolling'
             
             #refactor and filer out erroneous target naming 
@@ -490,7 +488,7 @@ def dashboard():
                             title="Behavior and Medication Data: " + patient, barmode="group")
             fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
             fig.update_layout(
-                            template = 'plotly_white',hovermode="x unified",
+                            template = 'plotly_white',hovermode="x",
                             legend=dict(
                             orientation="h",
                             yanchor="bottom",
@@ -526,7 +524,7 @@ def dashboard():
                             trendline="ols", title="Behavior and Medication Data: " + patient)
             fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
             fig.update_layout(
-                            template = 'plotly_white',hovermode="x unified",
+                            template = 'plotly_white',hovermode=False,
                             legend=dict(
                             orientation="h",
                             yanchor="bottom",
@@ -545,7 +543,7 @@ def dashboard():
                             trendline="lowess", trendline_options=dict(frac=0.1), title="Behavior and Medication Data: " + patient)
             fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
             fig.update_layout(
-                            template = 'plotly_white',hovermode="x unified",
+                            template = 'plotly_white',hovermode=False,
                             legend=dict(
                             orientation="h",
                             yanchor="bottom",
@@ -570,6 +568,15 @@ def dashboard():
             dfmeds['Date'] = dfmeds['Date'].fillna(end_date_wb)
             dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
             dfmeds['Medication'] = dfmeds['Medication'] + " (" + dfmeds['Units'] + ")"
+            
+                        #format date variables for grouping requirements
+            dfmeds['Year'] = pd.DatetimeIndex(dfmeds['Date']).year
+            dfmeds['Month'] = pd.DatetimeIndex(dfmeds['Date']).month
+            dfmeds['Yr_Mnth'] = pd.to_datetime(dfmeds['Date']).dt.strftime('%Y-%m')
+            dfmeds['Month_Formated'] = dfmeds['Month'].apply(lambda x: calendar.month_abbr[x])
+            dfmeds['Rolling'] = 'Rolling'
+            
+            print(dfmeds.head())
             
             #front fill dosage data 
             def expand_dates(ser):
@@ -601,7 +608,15 @@ def dashboard():
             fig2 = px.line(dfmeds, x='Date', y="Dose", color = "Medication",
                 title="Medication Data",log_y=False)
             fig2.update_xaxes(tickangle=45,)
-            fig2.update_layout(template = 'plotly_white',hovermode="x unified")
+            fig2.update_layout(template = 'plotly_white',hovermode="x unified",
+                                legend=dict(
+                                orientation="h",
+                                yanchor="bottom",
+                                y=1.02,
+                                xanchor="right",
+                                x=1),
+                                xaxis={'visible': False, 'showticklabels': False}
+                                )
         
         if not df_workbook.empty and start_date_wb == start_date_wb:
             start_date_wb = start_date
