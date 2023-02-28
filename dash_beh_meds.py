@@ -63,6 +63,7 @@ def dashboard():
                             dcc.Store(id='stored-meds-data', storage_type='session'),
                             dcc.Store(id='stored-name', storage_type='session'),
                             dcc.Store(id='stored-name-list', storage_type='session', data=[]),
+                            dcc.Store(id='stored-filepath-list', storage_type='session', data=[]),
                             
                             dcc.Upload(
                                 id='upload-data',
@@ -246,12 +247,14 @@ def dashboard():
     
     ##############################
     
-    def parse_contents(contents, filename, date, store_data, store_meds_data,stored_name):
+    def parse_contents(contents, filename, date, store_data, store_meds_data,stored_name, stored_filepath_list):
         content_type, content_string = contents.split(',')
         
         decoded = base64.b64decode(content_string)
         stored_df = pd.DataFrame(store_data)
         stored_meds_df = pd.DataFrame(store_meds_data)
+        stored_filepath_list = stored_filepath_list + [filename]
+        print("filepath list:",stored_filepath_list)
 
         try:
             workbook_xl = pd.ExcelFile(io.BytesIO(decoded))
@@ -291,7 +294,8 @@ def dashboard():
         return html.Div([
             dcc.Store(id='stored-data', data=dfmean.to_dict('records')),
             dcc.Store(id='stored-meds-data', data=dfmeds.to_dict('records')),
-            dcc.Store(id='stored-name', data=name)
+            dcc.Store(id='stored-name', data=name),
+            dcc.Store(id='stored_filepath_list', data=stored_filepath_list)
                         ])
 
     @app.callback(
@@ -301,13 +305,14 @@ def dashboard():
                 dash.dependencies.State('upload-data', 'last_modified'),
                 dash.dependencies.State('stored-data','data'),
                 dash.dependencies.State('stored-meds-data','data'),
-                dash.dependencies.State('stored-name','data')
+                dash.dependencies.State('stored-name','data'),
+                dash.dependencies.State('stored-filepath-list','data')
                 )
 
-    def update_output(contents, filename, date_modified, store_data, store_meds_data,stored_name):
+    def update_output(contents, filename, date_modified, store_data, store_meds_data,stored_name, stored_filepath_list):
         if contents is not None:
             children = [
-                parse_contents(contents, filename, date_modified, store_data, store_meds_data,stored_name)]
+                parse_contents(contents, filename, date_modified, store_data, store_meds_data,stored_name, stored_filepath_list)]
             return children
     
     ##############################
