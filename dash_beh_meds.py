@@ -16,6 +16,7 @@ import plotly.express as px # plotly v 5.2.1
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+import json
 
 import io
 import re
@@ -63,7 +64,7 @@ def dashboard():
                             dcc.Store(id='stored-meds-data', storage_type='session'),
                             dcc.Store(id='stored-name', storage_type='session'),
                             dcc.Store(id='stored-name-list', storage_type='session', data=[]),
-                            dcc.Store(id='stored-filepath-list', storage_type='session', data=[]),
+                            dcc.Store(id='stored-filepath-data', storage_type='session'),
                             
                             dcc.Upload(
                                 id='upload-data',
@@ -247,14 +248,22 @@ def dashboard():
     
     ##############################
     
-    def parse_contents(contents, filename, date, store_data, store_meds_data,stored_name, stored_filepath_list):
+    def parse_contents(contents, filename, date, store_data, store_meds_data,stored_name, stored_name_list):
         content_type, content_string = contents.split(',')
         
         decoded = base64.b64decode(content_string)
         stored_df = pd.DataFrame(store_data)
+        print("store data", store_data)
         stored_meds_df = pd.DataFrame(store_meds_data)
-        stored_filepath_list = stored_filepath_list + [filename]
-        print("filepath list:",stored_filepath_list)
+        print("stored_meds_df data", stored_meds_df)
+        stored_name_list = pd.DataFrame(stored_name_list)
+
+        new_name = pd.DataFrame( {
+            filename : [stored_name]
+        }
+        )
+
+        dfnames = pd.concat([stored_name_list, new_name])
 
         try:
             workbook_xl = pd.ExcelFile(io.BytesIO(decoded))
@@ -295,7 +304,7 @@ def dashboard():
             dcc.Store(id='stored-data', data=dfmean.to_dict('records')),
             dcc.Store(id='stored-meds-data', data=dfmeds.to_dict('records')),
             dcc.Store(id='stored-name', data=name),
-            dcc.Store(id='stored_filepath_list', data=stored_filepath_list)
+            dcc.Store(id='stored-name-list', data=dfnames.to_dict('records'))
                         ])
 
     @app.callback(
@@ -306,13 +315,13 @@ def dashboard():
                 dash.dependencies.State('stored-data','data'),
                 dash.dependencies.State('stored-meds-data','data'),
                 dash.dependencies.State('stored-name','data'),
-                dash.dependencies.State('stored-filepath-list','data')
+                dash.dependencies.State('stored-name-list','data')
                 )
 
-    def update_output(contents, filename, date_modified, store_data, store_meds_data,stored_name, stored_filepath_list):
+    def update_output(contents, filename, date_modified, store_data, store_meds_data,stored_name, stored_name_list):
         if contents is not None:
             children = [
-                parse_contents(contents, filename, date_modified, store_data, store_meds_data,stored_name, stored_filepath_list)]
+                parse_contents(contents, filename, date_modified, store_data, store_meds_data,stored_name, stored_name_list)]
             return children
     
     ##############################
@@ -337,7 +346,7 @@ def dashboard():
         dash.dependencies.Input('stored-data', 'data'),
         dash.dependencies.Input('stored-meds-data', 'data'),
         dash.dependencies.Input('stored-name', 'data'),
-        dash.dependencies.State(component_id='stored-name-list', component_property='data')
+        dash.dependencies.Input('stored-name-list', 'data')
         ]
     )
     # --------------------------------------------------------------------------------
@@ -349,15 +358,15 @@ def dashboard():
         else:
             patient = f"<b>{stored_name}</b>"
         
-        print(f"stored name {stored_name}")
+        # print(f"stored name {stored_name}")
         
-        stored_name_list.append(stored_name)
-        
-        print(f"list of names - {stored_name_list}")
+        # print(f"list of names - {stored_name_list}")
     
         #covert workbooks to dataframes     
         df_workbook = pd.DataFrame(data)
         dfmeds = pd.DataFrame(store_meds_data)
+        dfnames = pd.DataFrame(stored_name_list)
+        print(f"list of names - {dfnames.columns}")
         
         #rename Target and Episode_Count columns 
         if not df_workbook.empty:
