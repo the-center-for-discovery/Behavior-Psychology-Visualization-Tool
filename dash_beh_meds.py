@@ -366,7 +366,7 @@ def dashboard():
         df_workbook = pd.DataFrame(data)
         dfmeds = pd.DataFrame(store_meds_data)
         dfnames = pd.DataFrame(stored_name_list)
-        print(f"list of names - {dfnames.columns}")
+        print(f"list of names - {list(dfnames.columns)}")
         
         #rename Target and Episode_Count columns 
         if not df_workbook.empty:
@@ -530,7 +530,7 @@ def dashboard():
                               ),
         elif beh_gph =='ols':
             dfg[date_frmt] = pd.to_datetime(dfg[date_frmt])
-            print(dfg)
+            # print(dfg)
             fig = px.scatter(dfg, x=date_frmt, y="Episode_Count", color = "Target",
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",
@@ -550,7 +550,7 @@ def dashboard():
         
         else:
             dfg[date_frmt] = pd.to_datetime(dfg[date_frmt])
-            print(dfg)
+            # print(dfg)
             fig = px.scatter(dfg, x=date_frmt, y="Episode_Count", color = "Target",
                             labels={"Episode_Count": tally + " per Shift",
                                     "Target":"Target",},
