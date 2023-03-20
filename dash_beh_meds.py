@@ -136,6 +136,7 @@ def dashboard():
                                             with_portal = True,
                                             clearable=False,
                                             number_of_months_shown = 6,
+                                            is_RTL=True,
                                             min_date_allowed=date(2015, 1, 1),
                                             max_date_allowed=date(int(year), int(month), int(day)),
                                             initial_visible_month=date(int(year), int(month), int(day)),
