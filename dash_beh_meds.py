@@ -379,9 +379,10 @@ def dashboard():
             
         #get start and end from workbook
         if not df_workbook.empty:
-            start_date_wb = df_workbook['Date'].iloc[0]
-            end_date_wb = df_workbook['Date'].iloc[-1]
-           
+            # start_date_wb = df_workbook['Date'].iloc[0]
+            end_date_meds = df_workbook['Date'].iloc[-1]
+            start_date_wb = start_date
+            end_date_wb = end_date
         else:
             start_date_wb = start_date
             end_date_wb = end_date
@@ -424,6 +425,7 @@ def dashboard():
             flt_beh = (dfq['Date'] >= start_date_wb) & (dfq['Date'] <= end_date_wb)
             dfq = dfq.loc[flt_beh]
             # print(dfq.head())
+            
             #format date variables for grouping requirements
             dfq['Year'] = pd.DatetimeIndex(dfq['Date']).year
             dfq['Month'] = pd.DatetimeIndex(dfq['Date']).month
@@ -433,7 +435,7 @@ def dashboard():
             
             #refactor and filer out erroneous target naming 
             dfq = dfq[~dfq['Target'].str.isdecimal()]
-            dfq = dfq[~(dfq == 0).any(axis=1)]
+            # dfq = dfq[~(dfq == 0).any(axis=0)]
             dfq = dfq.replace('Self-injury', 'Self-Injury')
             dfq = dfq.replace('SIB', 'Self-Injury')
             # print(dfq.head())
@@ -492,7 +494,6 @@ def dashboard():
         if dfg.empty:        
             dfg = dfg.append({date_frmt: start_date_wb,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
         
-        # print(dfg)
         #ceate charts for behavior data
         if beh_gph == 'bar': 
             fig = px.bar(dfg, x=date_frmt, y="Episode_Count", color = "Target",
@@ -502,7 +503,7 @@ def dashboard():
                             title="Behavior and Medication Data: " + patient, barmode="group")
             fig.update_xaxes(tickangle=45, ticks="outside", ticklen=0,tickcolor='white')
             fig.update_layout(
-                            template = 'plotly_white',hovermode="x",
+                            template = 'plotly_white',hovermode="x unified",
                             legend=dict(
                             orientation="h",
                             yanchor="bottom",
@@ -579,8 +580,10 @@ def dashboard():
             dfmeds = dfmeds.drop_duplicates(subset = ['Date','Medication'],keep='last')
 
             dfmeds['Dose'] = dfmeds['Dose'].astype(float)
-            dfmeds['Date'] = dfmeds['Date'].fillna(end_date_wb)
+            print(end_date_meds)
+            dfmeds['Date'] = dfmeds['Date'].fillna(end_date_meds)
             dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
+            print(dfmeds.tail())
             dfmeds['Medication'] = dfmeds['Medication'] + " (" + dfmeds['Units'] + ")"
             
                         #format date variables for grouping requirements
@@ -594,7 +597,7 @@ def dashboard():
             
             #front fill dosage data 
             def expand_dates(ser):
-                return pd.DataFrame({'Date': pd.date_range(ser['Date'].min(), date.today(), freq='D')})
+                return pd.DataFrame({'Date': pd.date_range(ser['Date'].min(), end_date_meds, freq='D')})
 
             dfmeds = dfmeds.groupby(['Medication']).apply(expand_dates).reset_index().merge(dfmeds, how='left')[['Medication', 'Date', 'Dose']].ffill()
         else:
