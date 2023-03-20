@@ -133,9 +133,9 @@ def dashboard():
                                     dcc.DatePickerRange(
                                             id='my-date-picker-range',
                                             calendar_orientation='horizontal',
-                                            with_portal = False,
+                                            with_portal = True,
                                             clearable=False,
-                                            number_of_months_shown = 1,
+                                            number_of_months_shown = 6,
                                             min_date_allowed=date(2015, 1, 1),
                                             max_date_allowed=date(int(year), int(month), int(day)),
                                             initial_visible_month=date(int(year), int(month), int(day)),
@@ -648,10 +648,10 @@ dashboard()
 print("\nComplete! \n")
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    # app.run_server(debug=True)
     
     #Conor's Mac
     # app.run_server(host='10.1.183.58', port=8050)
     
     #Mac Pro0
-    # app.run_server(host='10.1.84.68', port=8050)
+    app.run_server(host='10.1.84.51', port=8050)
