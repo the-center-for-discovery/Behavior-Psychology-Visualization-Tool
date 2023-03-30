@@ -111,7 +111,6 @@ def dashboard():
                                                 {'label': 'Monthly', 'value': 'mon'},
                                                 {'label': 'Weekly', 'value': 'wk'},
                                                 {'label': 'Daily', 'value': 'day'},
-                                                # {'label': 'Shift', 'value': 'shift'},
                                                 {'label': 'Rolling', 'value': 'roll'},
                                                 ],
                                             value='mon',
@@ -133,9 +132,10 @@ def dashboard():
                                     dcc.DatePickerRange(
                                             id='my-date-picker-range',
                                             calendar_orientation='horizontal',
-                                            with_portal = False,
+                                            with_portal = True,
                                             clearable=False,
-                                            number_of_months_shown = 1,
+                                            number_of_months_shown = 6,
+                                            is_RTL=False,
                                             min_date_allowed=date(2015, 1, 1),
                                             max_date_allowed=date(int(year), int(month), int(day)),
                                             initial_visible_month=date(int(year), int(month), int(day)),
@@ -146,7 +146,7 @@ def dashboard():
                                             persisted_props=['start_date'],
                                             persistence_type='session',  # session, local, or memory. Default is 'local'
 
-                                            updatemode='bothdates',
+                                            updatemode='singledate',
                                         ),
                                             style={'margin-top': 20,},
                                             width={'size':2,'offset':2, 'order':3},
@@ -439,6 +439,8 @@ def dashboard():
             dfq = dfq.replace('Self-injury', 'Self-Injury')
             dfq = dfq.replace('SIB', 'Self-Injury')
             # print(dfq.head())
+            
+            dfq.to_csv('toy_data.csv', index = False)
 
             #NOTE; dataframes are aggregated here per selection of timeframe 
             #determine groupings for various graphical outputs

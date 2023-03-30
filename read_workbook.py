@@ -32,7 +32,12 @@ def get_month_dataframe(workbook_xl, month):
     #print(dfbeh.head())
     dfbeh = dfbeh.rename(columns = {'Unnamed: 1':'Shift','Unnamed: 2':'No Data','Unnamed: 7':str(dfbeh.columns[3])+'_beh','Unnamed: 25':str(dfbeh.columns[5])+'_beh',
                                     'Unnamed: 43':str(dfbeh.columns[7])+'_beh','Unnamed: 61':str(dfbeh.columns[9])+'_beh','Unnamed: 79':str(dfbeh.columns[11])+'_beh'})
+    
+    print(dfbeh.iloc[:,0])
     dfbeh.iloc[:,0] = dfbeh.iloc[:,0].fillna(method='ffill')
+    print(dfbeh.iloc[:,0])
+
+    
 
     #create 'month number' variable 
     month_name = dfbeh.columns[0]
@@ -80,6 +85,8 @@ def get_month_dataframe(workbook_xl, month):
     #create date column and convery to padas datetime
     behs['Date'] = date + '-' + behs.iloc[:,0].astype(str)
     behs['Date'] = pd.to_datetime(behs['Date'])
+    
+    
 
     #clean up values, return NaN for all unrecognized strings (ie ".")
     values = behs['value']
