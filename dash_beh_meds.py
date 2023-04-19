@@ -248,7 +248,7 @@ def dashboard():
         )
     
     app.layout = layout()
- 
+
     ##############################
     
     def parse_contents(contents, filename, date, store_data, store_meds_data,stored_name, stored_name_list):
@@ -588,7 +588,7 @@ def dashboard():
             print(end_date_meds)
             dfmeds['Date'] = dfmeds['Date'].fillna(end_date_meds)
             dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
-            print(dfmeds.tail())
+            # print(dfmeds.tail())
             dfmeds['Medication'] = dfmeds['Medication'] + " (" + dfmeds['Units'] + ")"
             
                         #format date variables for grouping requirements
@@ -598,7 +598,7 @@ def dashboard():
             dfmeds['Month_Formated'] = dfmeds['Month'].apply(lambda x: calendar.month_abbr[x])
             dfmeds['Rolling'] = 'Rolling'
             
-            print(dfmeds.head())
+            # print(dfmeds.head())
             
             #front fill dosage data 
             def expand_dates(ser):

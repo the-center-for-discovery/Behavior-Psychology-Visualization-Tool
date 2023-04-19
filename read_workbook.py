@@ -15,6 +15,7 @@ def get_month_with_dur_int(workbook_xl, month):
 
     #read in necessary sheets 
     df = pd.read_excel(workbook_xl, sheet_name=month, skiprows=[1,2])
+    print('workbook\n:',df)
     dfinfo = pd.read_excel(workbook_xl, sheet_name=0)
     dfstudet = pd.read_excel(workbook_xl, sheet_name=2, header=None)
     
@@ -37,8 +38,6 @@ def get_month_with_dur_int(workbook_xl, month):
     #print(dfbeh.iloc[:,0])
     dfbeh.iloc[:,0] = dfbeh.iloc[:,0].fillna(method='ffill')
     #print(dfbeh.iloc[:,0])
-
-    
 
     #create 'month number' variable 
     month_name = dfbeh.columns[0]
@@ -66,7 +65,6 @@ def get_month_with_dur_int(workbook_xl, month):
         beh_id = pd.melt(dfbeh, id_vars = [dfbeh.columns[0],dfbeh.columns[1],dfbeh.columns[2]],value_vars =[dfbeh.columns[bidx]])
         beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 93)])
 
-        
         if month_num == 4 or month_num == 6 or month_num == 9 or month_num == 11:
             beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 90)])
         elif month_num ==2:
@@ -87,8 +85,6 @@ def get_month_with_dur_int(workbook_xl, month):
     behs['Date'] = date + '-' + behs.iloc[:,0].astype(str)
     behs['Date'] = pd.to_datetime(behs['Date'])
     
-    
-
     #clean up values, return NaN for all unrecognized strings (ie ".")
     values = behs['value']
     for value_i, val in enumerate(values):

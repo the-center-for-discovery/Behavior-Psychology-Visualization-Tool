@@ -7,7 +7,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
-df = get_all_months_int_dur("/Users/zacharykondak/Documents/TCFD_projects/visualization tool/Behavior-Psychology-Visualization-Tool/data/DP Beh Data 2019-20.xlsm")
+df = get_all_months_int_dur("/Users/canderson/Documents/Python/Behavior-Psychology-Visualization-Tool/data/DP Beh Data 2022-23.xlsm")
 
 app.layout = html.Div([
     html.Div([
@@ -72,8 +72,9 @@ def create_time_series(dff):
     Output('x-time-series', 'figure'),
     Input('crossfilter-indicator-scatter', 'hoverData'))
 def update_y_timeseries(hoverData):
+    print(hoverData)
     date = hoverData['points'][0]['label']
-    #print(df.head)
+    print(date)
     #dff = df[df['Country Name'] == country_name]
     #dff = dff[dff['Indicator Name'] == xaxis_column_name]
     #title = '<b>{}</b><br>{}'.format(country_name, xaxis_column_name)
