@@ -34,7 +34,7 @@ def dashboard():
 
     #get date
     # Textual month, day and year
-    today = date.today()
+    today = datetime.datetime.today().date()
     today = today.strftime("%B %d, %Y")
     today_fmt = pd.to_datetime(today)
 
@@ -45,7 +45,8 @@ def dashboard():
     
     #------------------------------------------------------------------------
     #design layout of UI
-    app.layout = html.Div([
+    def layout():
+        return html.Div([
                     #div containing labels and input functions 
                     html.Div([
                         #add CFD logo and label for resident selection
@@ -246,6 +247,8 @@ def dashboard():
             ],
         )
     
+    app.layout = layout()
+ 
     ##############################
     
     def parse_contents(contents, filename, date, store_data, store_meds_data,stored_name, stored_name_list):
