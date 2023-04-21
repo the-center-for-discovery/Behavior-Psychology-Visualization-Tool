@@ -53,7 +53,7 @@ def get_month_with_dur_int(workbook_xl, month):
     #create date string 
     date = str(year_num) + '-' + str(month_num)
 
-    #create list of colum indexes for behavior data 
+    #create list of colum indexes for behavior episode counts 
     beh_indexes = [4,6,8,10,12]
 
     #loop through behavior indexes and create dataframes for each behavior 
@@ -65,12 +65,14 @@ def get_month_with_dur_int(workbook_xl, month):
         beh_id = pd.melt(dfbeh, id_vars = [dfbeh.columns[0],dfbeh.columns[1],dfbeh.columns[2]],value_vars =[dfbeh.columns[bidx]])
         beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 93)])
 
+        #cut off dataframe rows based on number of days in month
         if month_num == 4 or month_num == 6 or month_num == 9 or month_num == 11:
             beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 90)])
-        elif month_num ==2:
+        elif month_num == 2:
             beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 84)])
         else:
             beh_id = beh_id
+        
         #add dfs to list 
         behdfs.append(beh_id)
 
