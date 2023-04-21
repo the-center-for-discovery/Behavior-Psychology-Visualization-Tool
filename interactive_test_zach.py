@@ -7,7 +7,7 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
-df = get_all_months_int_dur("/Users/canderson/Documents/Python/Behavior-Psychology-Visualization-Tool/data/DP Beh Data 2022-23.xlsm")
+df = get_all_months_int_dur("data/DP Beh Data 2022-23.xlsm")
 
 app.layout = html.Div([
     html.Div([
