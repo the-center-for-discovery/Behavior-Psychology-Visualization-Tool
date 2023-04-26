@@ -85,28 +85,38 @@ def get_month_with_dur_int(workbook_xl, month):
             dfiter = dfiter
         
         dfdurinlist.append(dfiter)
-    
-    print(type(dfdurinlist))
-    print(type(dfdurinlist[0]))
+        
     # if isinstance(dfdurinlist[0], pd.DataFrame):
     dfdurin = pd.concat(dfdurinlist)
 
+    #create date column and convery to padas datetime
+    dfdurin['Date'] = date + '-' + dfdurin.iloc[:,0].astype(str)
+    dfdurin['Date'] = pd.to_datetime(dfdurin['Date'])
+    
     # print(dfdurin)
     
     #NOTE; add python debugger and find out why it's returning a tuple 
     # dfdurin = pd.concat(dfdurinlist)
     
     # print(dfdurin)
-
+    print(dfdurin.head())
     dfdurin.drop(columns=[dfdurin.columns[4],dfdurin.columns[5]], inplace=True)
     durin_m = pd.melt(dfdurin, id_vars = [dfdurin.columns[0],dfdurin.columns[1],dfdurin.columns[2],dfdurin.columns[3]])
+
+    #clean up values, return NaN for all unrecognized strings (ie ".")
+    values = durin_m['value']
+    for value_i, val in enumerate(values):
+        try: 
+            durin_m['value'][value_i] = float(durin_m['value'][value_i])
+        except:
+            durin_m['value'][value_i] = float("NaN")
     
-    durin_m = durin_m.groupby(['Target','variable'])['value'].sum().reset_index()
+    durin_m = durin_m.groupby(['Date','Target','variable'])['value'].sum().reset_index()
     durin_m = durin_m[~durin_m['Target'].str.contains('Insert')]
     
     duration = durin_m[durin_m['variable'].str.contains('Duration')]
     intensity = durin_m[durin_m['variable'].str.contains('Interval')]
-    print("this is fine")
+
     return duration, intensity
 
 #aggregates all months data into a single data frame with associated intensity and duration values.
@@ -118,7 +128,6 @@ def get_all_months_int_dur(workbook_xl):
     intensity_data = []
     
     for month in months:
-        print(month)
         duration, intensity = get_month_with_dur_int(xl_file, month)
         # print(df_month)
         duration_data.append(duration)
@@ -155,7 +164,6 @@ def get_month_dataframe(workbook_xl, month):
     dfbeh.iloc[:,0] = dfbeh.iloc[:,0].fillna(method='ffill')
     #print(dfbeh.iloc[:,0])
 
-    
 
     #create 'month number' variable 
     month_name = dfbeh.columns[0]
@@ -204,8 +212,6 @@ def get_month_dataframe(workbook_xl, month):
     behs['Date'] = date + '-' + behs.iloc[:,0].astype(str)
     behs['Date'] = pd.to_datetime(behs['Date'])
     
-    
-
     #clean up values, return NaN for all unrecognized strings (ie ".")
     values = behs['value']
     for value_i, val in enumerate(values):
@@ -226,6 +232,7 @@ def get_all_months_df(workbook_xl):
     
     for month in months:
         df_month = get_month_dataframe(xl_file, month)
+        print(df_month)
         months_data.append(df_month)
     return pd.concat(months_data)
 

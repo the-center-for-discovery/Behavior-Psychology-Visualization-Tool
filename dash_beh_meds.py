@@ -62,6 +62,8 @@ def dashboard():
                         
                         #row containing label and resident select
                             dcc.Store(id='stored-data', storage_type='session'),
+                            dcc.Store(id='stored-dur-data', storage_type='session'),
+                            dcc.Store(id='stored-int-data', storage_type='session'),
                             dcc.Store(id='stored-meds-data', storage_type='session'),
                             dcc.Store(id='stored-name', storage_type='session'),
                             dcc.Store(id='stored-name-list', storage_type='session', data=[]),
@@ -218,14 +220,14 @@ def dashboard():
                         
                     dcc.Tab(label='Duration', children=[
                         dbc.Col(
-                            dcc.Graph(id='beh_meds_bar2',figure={}),
+                            dcc.Graph(id='beh_meds_dur',figure={}),
                                     width={'size': 10,'offset':1, 'order':1}
                                 ),]
                             ),
 
                     dcc.Tab(label='Intervals', children=[
                         dbc.Col(
-                            dcc.Graph(id='beh_meds_bar3',figure={}),
+                            dcc.Graph(id='beh_meds_int',figure={}),
                                     width={'size': 10,'offset':1, 'order':1}
                                 ),]
                             ),
@@ -269,12 +271,16 @@ def dashboard():
 
     ##############################
     
-    def parse_contents(contents, filename, date, store_data, store_meds_data,stored_name, stored_name_list):
+    def parse_contents(contents, filename, date, store_data, store_dur_data, store_int_data, store_meds_data,stored_name, stored_name_list):
         content_type, content_string = contents.split(',')
         
         decoded = base64.b64decode(content_string)
         stored_df = pd.DataFrame(store_data)
         print("store data", store_data)
+        stored_dur_df = pd.DataFrame(store_dur_data)
+        print("stored dur data", store_dur_data)
+        stored_int_df = pd.DataFrame(store_int_data)
+        print("stored int data", store_dur_data)
         stored_meds_df = pd.DataFrame(store_meds_data)
         print("stored_meds_df data", stored_meds_df)
         stored_name_list = pd.DataFrame(stored_name_list)
@@ -311,6 +317,7 @@ def dashboard():
             df['value'] = df['value'].astype(float)
             dfmean = df.groupby(['Date', 'Shift','variable'],sort=False,)['value'].mean().round(2).reset_index()
             dfmean = pd.concat([stored_df, dfmean])
+            # print(dfmean)
 
             dfmeds = get_all_meds_data(workbook_xl)
 
@@ -325,9 +332,11 @@ def dashboard():
             return html.Div([
                 'There was an error processing this file.'
             ])
-
+        
         return html.Div([
             dcc.Store(id='stored-data', data=dfmean.to_dict('records')),
+            dcc.Store(id='stored-dur-data', data=dfdur.to_dict('records')),
+            dcc.Store(id='stored-int-data', data=dfint.to_dict('records')),
             dcc.Store(id='stored-meds-data', data=dfmeds.to_dict('records')),
             dcc.Store(id='stored-name', data=name),
             dcc.Store(id='stored-name-list', data=dfnames.to_dict('records'))
@@ -339,15 +348,17 @@ def dashboard():
                 dash.dependencies.State('upload-data', 'filename'),
                 dash.dependencies.State('upload-data', 'last_modified'),
                 dash.dependencies.State('stored-data','data'),
+                dash.dependencies.State('stored-dur-data','data'),
+                dash.dependencies.State('stored-int-data','data'),
                 dash.dependencies.State('stored-meds-data','data'),
                 dash.dependencies.State('stored-name','data'),
                 dash.dependencies.State('stored-name-list','data')
                 )
 
-    def update_output(contents, filename, date_modified, store_data, store_meds_data,stored_name, stored_name_list):
+    def update_output(contents, filename, date_modified, store_data,store_dur_data, store_int_data, store_meds_data,stored_name, stored_name_list):
         if contents is not None:
             children = [
-                parse_contents(contents, filename, date_modified, store_data, store_meds_data,stored_name, stored_name_list)]
+                parse_contents(contents, filename, date_modified, store_data, store_dur_data,store_dur_data, store_meds_data,stored_name, stored_name_list)]
             return children
     
     ##############################
@@ -357,8 +368,8 @@ def dashboard():
         [
         dash.dependencies.Output(component_id='beh_meds_bar', component_property='figure'),
         dash.dependencies.Output(component_id='beh_meds_line', component_property='figure'),
-        dash.dependencies.Output(component_id='beh_meds_bar2', component_property='figure'),
-        dash.dependencies.Output(component_id='beh_meds_bar3', component_property='figure'),
+        dash.dependencies.Output(component_id='beh_meds_dur', component_property='figure'),
+        dash.dependencies.Output(component_id='beh_meds_int', component_property='figure'),
         dash.dependencies.Output(component_id='my-date-picker-range', component_property='start_date'),
         dash.dependencies.Output(component_id='my-date-picker-range', component_property='end_date')
         ],
@@ -372,6 +383,8 @@ def dashboard():
         dash.dependencies.Input(component_id='slct_scl', component_property='value'),
         dash.dependencies.Input(component_id='slct_sft', component_property='value'),
         dash.dependencies.Input('stored-data', 'data'),
+        dash.dependencies.Input('stored-dur-data', 'data'),
+        dash.dependencies.Input('stored-int-data', 'data'),
         dash.dependencies.Input('stored-meds-data', 'data'),
         dash.dependencies.Input('stored-name', 'data'),
         dash.dependencies.Input('stored-name-list', 'data')
@@ -379,7 +392,7 @@ def dashboard():
     )
     # --------------------------------------------------------------------------------
     # define function to control graphical outputs
-    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data,store_meds_data,stored_name,stored_name_list):
+    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data,store_dur_data,store_int_data,store_meds_data,stored_name,stored_name_list):
         
         if not stored_name:
             patient = 'patient'
@@ -392,6 +405,10 @@ def dashboard():
     
         #covert workbooks to dataframes     
         df_workbook = pd.DataFrame(data)
+        dfdur = pd.DataFrame(store_dur_data)
+        print(dfdur)
+        dfint = pd.DataFrame(store_int_data)
+        print(dfint)        
         dfmeds = pd.DataFrame(store_meds_data)
         dfnames = pd.DataFrame(stored_name_list)
         print(f"list of names - {list(dfnames.columns)}")
@@ -598,7 +615,32 @@ def dashboard():
                             x=1),
                             xaxis_title=None
                               ),
-
+        
+        #DUR DATA ------------------------------------------------------------------------------------------------------
+        #NOTE; review "grouped + stacked barchart examples" to get final plots 
+        if not dfdur.empty:
+            print(dfdur.head(30))
+            figdur = px.bar(dfdur,x = 'Target', y='value', color = 'variable',
+                color_discrete_sequence= px.colors.sequential.Reds, category_orders={"variable": ["Duration: 0", "Duration: <5", "Sat", "Duration: 6-10",
+                                                                                            "Duration: 11-15","Duration: 16-20", "Duration: 20+"]})
+            figdur.update_traces(width=0.4)
+        else:
+            dfdur = dfdur.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
+            print(dfdur)
+            figdur = px.bar(dfdur,x = 'Target', y='value', color = 'variable')
+        
+        #INT DATA ------------------------------------------------------------------------------------------------------
+        if not dfint.empty:
+            print(dfint.head())
+            figint = px.bar(dfint,x = 'Target', y='value', color = 'variable',
+                color_discrete_sequence= px.colors.sequential.Greens, category_orders={"variable": ["Interval: 0", "Interval: 1", "Interval: 2",
+                                                                                               "Interval: 3","Interval: 4"]})
+            figint.update_traces(width=0.4)
+        else:
+            dfint = dfint.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
+            print(dfint)
+            figint = px.bar(dfint,x = 'Target', y='value', color = 'variable')
+    
         #MED DATA ------------------------------------------------------------------------------------------------------
         #group medication data, convert date vars to python datetime abd sort ascending
         print(patient)
@@ -670,7 +712,7 @@ def dashboard():
             start_date_wb = start_date
             end_date_wb = end_date
         
-        return fig, fig2, fig, fig, start_date_wb, end_date_wb
+        return fig, fig2, figdur, figint, start_date_wb, end_date_wb
 
         # ------------------------------------------------------------------------------
 
