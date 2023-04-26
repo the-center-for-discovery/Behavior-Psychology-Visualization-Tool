@@ -208,15 +208,33 @@ def dashboard():
 
             #2 rows containing graphs
             dbc.Row(
-                dbc.Col(
-                    dcc.Graph(id='beh_meds_bar',figure={}),
-                            width={'size': 10,'offset':1, 'order':1}
-                        ),
-                    ),
+                dcc.Tabs([
+                    dcc.Tab(label='Episodes', children=[
+                        dbc.Col(
+                            dcc.Graph(id='beh_meds_bar',figure={}),
+                                    width={'size': 10,'offset':1, 'order':1}
+                                ),]
+                            ),
+                        
+                    dcc.Tab(label='Duration', children=[
+                        dbc.Col(
+                            dcc.Graph(id='beh_meds_bar2',figure={}),
+                                    width={'size': 10,'offset':1, 'order':1}
+                                ),]
+                            ),
 
+                    dcc.Tab(label='Intervals', children=[
+                        dbc.Col(
+                            dcc.Graph(id='beh_meds_bar3',figure={}),
+                                    width={'size': 10,'offset':1, 'order':1}
+                                ),]
+                            ),
+                        
+                        ]),
+                    ),
+            
             dbc.Row(
-                [
-                    
+                [    
             dbc.Row(
                     dbc.Col(
                     dcc.Graph(id='beh_meds_line',figure={}),
@@ -295,7 +313,10 @@ def dashboard():
             dfmean = pd.concat([stored_df, dfmean])
 
             dfmeds = get_all_meds_data(workbook_xl)
+
             dfmeds = pd.concat([stored_meds_df, dfmeds])
+            
+            dfdur, dfint = get_all_months_int_dur(workbook_xl)
         
         except Exception as e:
             print(e)
@@ -334,6 +355,8 @@ def dashboard():
         [
         dash.dependencies.Output(component_id='beh_meds_bar', component_property='figure'),
         dash.dependencies.Output(component_id='beh_meds_line', component_property='figure'),
+        dash.dependencies.Output(component_id='beh_meds_bar2', component_property='figure'),
+        dash.dependencies.Output(component_id='beh_meds_bar3', component_property='figure'),
         dash.dependencies.Output(component_id='my-date-picker-range', component_property='start_date'),
         dash.dependencies.Output(component_id='my-date-picker-range', component_property='end_date')
         ],
@@ -354,7 +377,7 @@ def dashboard():
     )
     # --------------------------------------------------------------------------------
     # define function to control graphical outputs
-    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data, store_meds_data,stored_name,stored_name_list):
+    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data,store_meds_data,stored_name,stored_name_list):
         
         if not stored_name:
             patient = 'patient'
@@ -496,7 +519,8 @@ def dashboard():
             dfg = dfq
 
         #if dataframe empty pass in dummy data
-        if dfg.empty:        
+        if dfg.empty:
+            print(dfg)        
             dfg = dfg.append({date_frmt: start_date_wb,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
         
         #ceate charts for behavior data
@@ -644,7 +668,7 @@ def dashboard():
             start_date_wb = start_date
             end_date_wb = end_date
         
-        return fig, fig2, start_date_wb, end_date_wb
+        return fig, fig2, fig, fig, start_date_wb, end_date_wb
 
         # ------------------------------------------------------------------------------
 

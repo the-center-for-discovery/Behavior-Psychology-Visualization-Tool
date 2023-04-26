@@ -12,35 +12,29 @@ def get_month_with_dur_int(workbook_xl, month):
     #set dataframe display options 
     pd.options.display.max_columns = 200
     pd.options.display.max_rows = 200
+    warnings.filterwarnings('ignore')
 
     #read in necessary sheets 
-    df = pd.read_excel(workbook_xl, sheet_name=month, skiprows=[1,2])
-    print('workbook\n:',df)
+    dfcolnmes = pd.read_excel(workbook_xl, sheet_name=month, skiprows=0)
+    df = pd.read_excel(workbook_xl, sheet_name=month, skiprows=1)
+
     dfinfo = pd.read_excel(workbook_xl, sheet_name=0)
     dfstudet = pd.read_excel(workbook_xl, sheet_name=2, header=None)
     
     #get years variable 
     year = dfinfo.iloc[3,1]
     year1, year2 = str.split(year, '-')
-    
-    #get name
-    # name = dfstudet.iloc[0,0]
-    # print(f"name is {name}")
-    
-    # pdb.set_trace()
-    #select necessary columns and front fill NaNs in month column 
-    dfbeh = df.iloc[:, [0,1,2,4,7,22,25,40,43,58,61,76,79]]
 
-    # print(dfbeh.head())
-    dfbeh = dfbeh.rename(columns = {'Unnamed: 1':'Shift','Unnamed: 2':'No Data','Unnamed: 7':str(dfbeh.columns[3])+'_beh','Unnamed: 25':str(dfbeh.columns[5])+'_beh',
-                                    'Unnamed: 43':str(dfbeh.columns[7])+'_beh','Unnamed: 61':str(dfbeh.columns[9])+'_beh','Unnamed: 79':str(dfbeh.columns[11])+'_beh'})
-    
-    #print(dfbeh.iloc[:,0])
-    dfbeh.iloc[:,0] = dfbeh.iloc[:,0].fillna(method='ffill')
-    #print(dfbeh.iloc[:,0])
+
+    #clean up column names 
+    df.columns = df.columns.str.replace('.1','')
+    df.columns = df.columns.str.replace('.2','') 
+    df.columns = df.columns.str.replace('.3','') 
+    df.columns = df.columns.str.replace('.4','') 
+    df.columns = df.columns.str.replace('.5','')
 
     #create 'month number' variable 
-    month_name = dfbeh.columns[0]
+    month_name = dfcolnmes.columns[0]
     datetime_object = datetime.datetime.strptime(month_name, "%B")
     month_num = datetime_object.month
 
@@ -53,51 +47,72 @@ def get_month_with_dur_int(workbook_xl, month):
     #create date string 
     date = str(year_num) + '-' + str(month_num)
 
-    #create list of colum indexes for behavior episode counts 
-    beh_indexes = [4,6,8,10,12]
 
-    #loop through behavior indexes and create dataframes for each behavior 
-    behdfs = []
-    for i, bidx in enumerate(beh_indexes):
-        #create new var for each df 
-        beh_id = f"beh{i+1}" 
-        #create long format df for behavior and drop unnecessary rows 
-        beh_id = pd.melt(dfbeh, id_vars = [dfbeh.columns[0],dfbeh.columns[1],dfbeh.columns[2]],value_vars =[dfbeh.columns[bidx]])
-        beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 93)])
+    #create indexes and list variable 
+    idx1 = [8,26,44,62,80]
+    idx2 = [21,39,57,75,93]
+    tgt = [4,22,40,58,76]
+
+    dfdurinlist=[]
+    for i, enum in enumerate(idx1):
+        
+        dfiter = df.iloc[:,[0,1,2] + list(range(enum,idx2[i]))]
+        dfiter.insert(3,'Target', str(dfcolnmes.columns[tgt[i]]))
+        dfiter.drop(0, inplace=True)
+
+        #print(pd.DataFrame(dfiter.head()))
+        dfiter.columns.values[6] = 'Duration: 0'
+        dfiter.columns.values[7] = 'Duration: <5'
+        dfiter.columns.values[8] = 'Duration: 6-10'
+        dfiter.columns.values[9] = 'Duration: 11-15'
+        dfiter.columns.values[10] = 'Duration: 16-20'
+        dfiter.columns.values[11] = 'Duration: 20+'
+        dfiter.columns.values[12] = 'Interval: 0'
+        dfiter.columns.values[13] = 'Interval: 1'
+        dfiter.columns.values[14] = 'Interval: 2'
+        dfiter.columns.values[15] = 'Interval: 3'
+        dfiter.columns.values[16] = 'Interval: 4'
+
+        dfiter = dfiter.drop(dfiter.index[np.where(dfiter.index >= 94)])
+        dfiter.iloc[:,0] = dfiter.iloc[:,0].fillna(method='ffill')
 
         #cut off dataframe rows based on number of days in month
         if month_num == 4 or month_num == 6 or month_num == 9 or month_num == 11:
-            beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 90)])
+            dfiter = dfiter.drop(dfiter.index[np.where(dfiter.index >= 90)])
         elif month_num == 2:
-            beh_id = beh_id.drop(beh_id.index[np.where(beh_id.index >= 84)])
+            dfiter = dfiter.drop(dfiter.index[np.where(dfiter.index >= 84)])
         else:
-            beh_id = beh_id
+            dfiter = dfiter
         
-        #add dfs to list 
-        behdfs.append(beh_id)
-
-    #cocatanate into one lare dataframe, drop unnecessary rows 
-    behs = pd.concat(behdfs)
+        dfdurinlist.append(dfiter)
+        print(dfdurinlist[0])
     
-    behs = behs[~behs['variable'].isin(['Insert_beh'])]
-    #tidy up variable names and reset index
-    behs['variable'] = behs['variable'].str.replace(r'_beh', '')
-    behs.reset_index(drop = True,inplace=True)
-    #create date column and convery to padas datetime
-    behs['Date'] = date + '-' + behs.iloc[:,0].astype(str)
-    behs['Date'] = pd.to_datetime(behs['Date'])
+    #NOTE; add python debugger and find out why it's returning a tuple 
+    dfdurin = pd.concat(dfdurinlist)
     
-    #clean up values, return NaN for all unrecognized strings (ie ".")
-    values = behs['value']
-    for value_i, val in enumerate(values):
-        try: 
-            behs['value'][value_i] = float(behs['value'][value_i])
-        except:
-            behs['value'][value_i] = float("NaN")
+    print(dfdurin)
 
-    #get the name of the first column, which we drop
-    month_to_remove = behs.columns[0]
-    return behs.drop(month_to_remove, axis=1)
+    dfdurin.drop(columns=[dfdurin.columns[4],dfdurin.columns[5]], inplace=True)
+    durin_m = pd.melt(dfdurin, id_vars = [dfdurin.columns[0],dfdurin.columns[1],dfdurin.columns[2],dfdurin.columns[3]])
+    
+    durin_m = durin_m.groupby(['Target','variable'])['value'].sum().reset_index()
+    durin_m = durin_m[~durin_m['Target'].str.contains('Insert')]
+    
+    duration = durin_m[durin_m['variable'].str.contains('Duration')]
+    interval = durin_m[durin_m['variable'].str.contains('Interval')]
+
+    return duration, interval
+
+#aggregates all months data into a single data frame with associated intensity and duration values.
+def get_all_months_int_dur(workbook_xl):
+    months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
+    xl_file = pd.ExcelFile(workbook_xl)                
+    months_data = []
+    
+    for month in months:
+        df_month = get_month_with_dur_int(xl_file, month)
+        months_data.append(df_month)
+    return pd.concat(months_data)
 
 #define a function encapsulting above code so that we can get data for one month
 def get_month_dataframe(workbook_xl, month):
@@ -200,17 +215,6 @@ def get_all_months_df(workbook_xl):
     
     for month in months:
         df_month = get_month_dataframe(xl_file, month)
-        months_data.append(df_month)
-    return pd.concat(months_data)
-
-#aggregates all months data into a single data frame with associated intensity and duration values.
-def get_all_months_int_dur(workbook_xl):
-    months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
-    xl_file = pd.ExcelFile(workbook_xl)                
-    months_data = []
-    
-    for month in months:
-        df_month = get_month_with_dur_int(xl_file, month)
         months_data.append(df_month)
     return pd.concat(months_data)
 
