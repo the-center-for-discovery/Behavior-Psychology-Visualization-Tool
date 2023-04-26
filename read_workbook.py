@@ -85,12 +85,18 @@ def get_month_with_dur_int(workbook_xl, month):
             dfiter = dfiter
         
         dfdurinlist.append(dfiter)
-        print(dfdurinlist[0])
+    
+    print(type(dfdurinlist))
+    print(type(dfdurinlist[0]))
+    # if isinstance(dfdurinlist[0], pd.DataFrame):
+    dfdurin = pd.concat(dfdurinlist)
+
+    # print(dfdurin)
     
     #NOTE; add python debugger and find out why it's returning a tuple 
-    dfdurin = pd.concat(dfdurinlist)
+    # dfdurin = pd.concat(dfdurinlist)
     
-    print(dfdurin)
+    # print(dfdurin)
 
     dfdurin.drop(columns=[dfdurin.columns[4],dfdurin.columns[5]], inplace=True)
     durin_m = pd.melt(dfdurin, id_vars = [dfdurin.columns[0],dfdurin.columns[1],dfdurin.columns[2],dfdurin.columns[3]])
@@ -99,20 +105,25 @@ def get_month_with_dur_int(workbook_xl, month):
     durin_m = durin_m[~durin_m['Target'].str.contains('Insert')]
     
     duration = durin_m[durin_m['variable'].str.contains('Duration')]
-    interval = durin_m[durin_m['variable'].str.contains('Interval')]
-
-    return duration, interval
+    intensity = durin_m[durin_m['variable'].str.contains('Interval')]
+    print("this is fine")
+    return duration, intensity
 
 #aggregates all months data into a single data frame with associated intensity and duration values.
 def get_all_months_int_dur(workbook_xl):
     months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
     xl_file = pd.ExcelFile(workbook_xl)                
-    months_data = []
+    
+    duration_data = []
+    intensity_data = []
     
     for month in months:
-        df_month = get_month_with_dur_int(xl_file, month)
-        months_data.append(df_month)
-    return pd.concat(months_data)
+        print(month)
+        duration, intensity = get_month_with_dur_int(xl_file, month)
+        # print(df_month)
+        duration_data.append(duration)
+        intensity_data.append(intensity)
+    return pd.concat(duration_data), pd.concat(intensity_data)
 
 #define a function encapsulting above code so that we can get data for one month
 def get_month_dataframe(workbook_xl, month):

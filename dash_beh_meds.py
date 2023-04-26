@@ -317,6 +317,8 @@ def dashboard():
             dfmeds = pd.concat([stored_meds_df, dfmeds])
             
             dfdur, dfint = get_all_months_int_dur(workbook_xl)
+            
+            print(dfint)
         
         except Exception as e:
             print(e)
