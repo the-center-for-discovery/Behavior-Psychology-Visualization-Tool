@@ -99,7 +99,7 @@ def get_month_with_dur_int(workbook_xl, month):
     # dfdurin = pd.concat(dfdurinlist)
     
     # print(dfdurin)
-    print(dfdurin.head())
+    # print(dfdurin.head())
     dfdurin.drop(columns=[dfdurin.columns[4],dfdurin.columns[5]], inplace=True)
     durin_m = pd.melt(dfdurin, id_vars = [dfdurin.columns[0],dfdurin.columns[1],dfdurin.columns[2],dfdurin.columns[3]])
 
