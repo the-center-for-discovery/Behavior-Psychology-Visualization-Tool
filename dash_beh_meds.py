@@ -631,7 +631,7 @@ def dashboard():
             figdur = go.Figure(
                 layout=go.Layout(
                     height=600,
-                    width=1000,
+                    #width=1000,
                     barmode="group",
                     yaxis_showticklabels=False,
                     yaxis_showgrid=False,
