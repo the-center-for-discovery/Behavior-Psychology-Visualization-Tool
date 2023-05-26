@@ -628,6 +628,8 @@ def dashboard():
             df_dates = dfdur_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfdur_wide_grp.columns].sum()
             dfdur_wide_grp = df_month.drop('Yr_Mnth', axis='columns')
 
+            print(df_month.tail(50))
+
             figdur = go.Figure(
                 layout=go.Layout(
                     height=600,
