@@ -619,11 +619,120 @@ def dashboard():
         #DUR DATA ------------------------------------------------------------------------------------------------------
         #NOTE; review "grouped + stacked barchart examples" to get final plots 
         if not dfdur.empty:
-            print(dfdur.head(30))
-            figdur = px.bar(dfdur,x = 'Target', y='value', color = 'variable',
-                color_discrete_sequence= px.colors.sequential.Reds, category_orders={"variable": ["Duration: 0", "Duration: <5", "Sat", "Duration: 6-10",
-                                                                                            "Duration: 11-15","Duration: 16-20", "Duration: 20+"]})
-            figdur.update_traces(width=0.4)
+            targets = dfdur["Target"].unique()
+            dfdur_wide = pd.pivot_table(dfdur, values='value', index=['Date', 'variable'], columns='Target',aggfunc=np.max)
+            dfdur_wide_grp = pd.pivot_table(dfdur_wide, index="Date", columns="variable", values=targets)
+
+            dfdur_wide_grp['Yr_Mnth'] = pd.to_datetime(dfdur_wide_grp.index).strftime('%Y-%m')
+            df_month = dfdur_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfdur_wide_grp.columns].sum().reset_index()
+            df_dates = dfdur_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfdur_wide_grp.columns].sum()
+            dfdur_wide_grp = df_month.drop('Yr_Mnth', axis='columns')
+
+            figdur = go.Figure(
+                layout=go.Layout(
+                    height=600,
+                    width=1000,
+                    barmode="group",
+                    yaxis_showticklabels=False,
+                    yaxis_showgrid=False,
+                    yaxis_range=[0, dfdur_wide_grp.groupby(axis=1, level=0).sum().max().max() * 1.5],
+                # Secondary y-axis overlayed on the primary one and not visible
+                    yaxis2=go.layout.YAxis(
+                        visible=False,
+                        matches="y",
+                        overlaying="y",
+                        anchor="x",
+                    ),
+                    font=dict(size=24),
+                    legend_x=0,
+                    legend_y=1,
+                    legend_orientation="h",
+                    hovermode="x",
+                    margin=dict(b=0,t=10,l=0,r=10)
+                )
+            )
+
+            # Define some colors for the product, revenue pairs
+            colors = {
+                "beh 1" : {
+                    "Duration: 20+" : "#00D8FF",
+                    "Duration: 16-20": "#00BCDE",
+                    "Duration: 11-15": "#00A7C6",
+                    "Duration: 6-10": "#0089A3",
+                    "Duration: <5": "#006D82",
+                    "Duration: 0": "#005262",
+                },
+                "beh 2" : {
+                    "Duration: 20+" : "#F7FF00",
+                    "Duration: 16-20": "#D6DD00",
+                    "Duration: 11-15": "#BAC100",
+                    "Duration: 6-10": "#9CA200",
+                    "Duration: <5": "#838800",
+                    "Duration: 0": "#6A6E00",
+                },
+                "beh 3" : {
+                    "Duration: 20+" : "#00FF08",
+                    "Duration: 16-20": "#00ED07",
+                    "Duration: 11-15": "#00D006",
+                    "Duration: 6-10": "#00AD05",
+                    "Duration: <5": "#008C04",
+                    "Duration: 0": "#006A03",
+                },
+                "beh 4" : {
+                    "Duration: 20+" : "#FF0000",
+                    "Duration: 16-20": "#F00202",
+                    "Duration: 11-15": "#CA0000",
+                    "Duration: 6-10": "#AF0000",
+                    "Duration: <5": "#900000",
+                    "Duration: 0": "#6C0000",
+                },
+                "beh 5" : {
+                    "Duration: 20+" : "#d900ff",
+                    "Duration: 16-20": "#bd02de",
+                    "Duration: 11-15": "#9a02b5",
+                    "Duration: 6-10": "#85039c",
+                    "Duration: <5": "#68017a",
+                    "Duration: 0": "#43014f",
+                },
+            }
+
+            # Add the traces
+            for i, t in enumerate(colors):
+                base_offset = 0
+                for j, col in enumerate(colors[t]):
+                    if i >= len(targets):
+                        continue
+                    beh = targets[i]
+                    if (dfdur_wide_grp[beh][col] == 0).all():
+                        continue
+                    # print(df[t][col])
+                    # print(df.index)
+                    figdur.add_trace(go.Bar(
+                        x=df_dates.index,
+                        y=dfdur_wide_grp[beh][col],
+                        base=base_offset,
+                        # Set the right yaxis depending on the selected product (from enumerate)
+                        # yaxis=f"y{i + 1}",
+                        # Offset the bar trace, offset needs to match the width
+                        # The values here are in milliseconds, 1billion ms is ~1/3 month
+                        offsetgroup=str(i),
+                        #offset=(i - 1) * 1,
+                        #width=1,
+                        legendgroup=beh,
+                        legendgrouptitle_text=beh,
+                        name=col,
+                        marker_color=colors[t][col],
+                        marker_line=dict(width=2, color="#333"),
+                        hovertemplate= beh + " " + str(col)+ " - %{y} " + "<extra></extra>"
+                                        )
+                                )
+                    
+                    base_offset += dfdur_wide_grp[beh][col]
+
+            #figdur = px.bar(dfdur,x = 'Target', y='value', color = 'variable',
+            #    color_discrete_sequence= px.colors.sequential.Reds, category_orders={"variable": ["Duration: 0", "Duration: <5", "Sat", "Duration: 6-10",
+            #                                                                                "Duration: 11-15","Duration: 16-20", "Duration: 20+"]})
+            #figdur.update_traces(width=0.4)
         else:
             dfdur = dfdur.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
             print(dfdur)
