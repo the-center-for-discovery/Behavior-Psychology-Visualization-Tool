@@ -742,11 +742,112 @@ def dashboard():
         
         #INT DATA ------------------------------------------------------------------------------------------------------
         if not dfint.empty:
-            print(dfint.head())
-            figint = px.bar(dfint,x = 'Target', y='value', color = 'variable',
-                color_discrete_sequence= px.colors.sequential.Greens, category_orders={"variable": ["Interval: 0", "Interval: 1", "Interval: 2",
-                                                                                               "Interval: 3","Interval: 4"]})
-            figint.update_traces(width=0.4)
+            targets = dfint["Target"].unique()
+            dfin_wide = pd.pivot_table(dfint, values='value', index=['Date', 'variable'], columns='Target',aggfunc=np.max)
+            dfin_wide_grp = pd.pivot_table(dfin_wide, index="Date", columns="variable", values=targets)
+            dfin_wide_grp.index.name = None
+
+            #group by month
+            dfin_wide_grp['Yr_Mnth'] = pd.to_datetime(dfin_wide_grp.index).strftime('%Y-%m')
+            dfin_m = dfin_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfin_wide_grp.columns].sum().reset_index()
+            df_month_data = dfin_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfin_wide_grp.columns].sum()
+            dfin_wide_grp = dfin_m.drop('Yr_Mnth', axis='columns')
+
+            # Create a figure with the right layout
+            figint = go.Figure(
+                layout=go.Layout(
+                    height=600,
+                    #width=1000,
+                    barmode="group",
+                    yaxis_showticklabels=False,
+                    yaxis_showgrid=False,
+                    yaxis_range=[0, dfin_wide_grp.groupby(axis=1, level=0).sum().max().max() * 1.5],
+                # Secondary y-axis overlayed on the primary one and not visible
+                    yaxis2=go.layout.YAxis(
+                        visible=False,
+                        matches="y",
+                        overlaying="y",
+                        anchor="x",
+                    ),
+                    font=dict(size=24),
+                    legend_x=0,
+                    legend_y=1,
+                    legend_orientation="h",
+                    hovermode="x",
+                    margin=dict(b=0,t=10,l=0,r=10)
+                )
+            )
+
+            # Define some colors for the product, revenue pairs
+            colors = {
+                "SIB" : {
+                    "Interval: 0" : "#00D8FF",
+                    "Interval: 1": "#00BCDE",
+                    "Interval: 2": "#00A7C6",
+                    "Interval: 3": "#0089A3",
+                    "Interval: 4": "#006D82",
+                },
+                "Aggression" : {
+                    "Interval: 0" : "#F7FF00",
+                    "Interval: 1": "#D6DD00",
+                    "Interval: 2": "#BAC100",
+                    "Interval: 3": "#9CA200",
+                    "Interval: 4": "#838800",
+                },
+                "Disruptive" : {
+                    "Interval: 0" : "#00FF08",
+                    "Interval: 1": "#00ED07",
+                    "Interval: 2": "#00D006",
+                    "Interval: 3": "#00AD05",
+                    "Interval: 4": "#008C04",
+                },
+                "Self Mutilation" : {
+                    "Interval: 0" : "#FF0000",
+                    "Interval: 1": "#F00202",
+                    "Interval: 2": "#CA0000",
+                    "Interval: 3": "#AF0000",
+                    "Interval: 4": "#900000",
+                },
+            }
+
+            #removes all zeros rows
+            # df = df.loc[~(df==0).all(axis=1)]
+
+            # Add the traces
+            for i, t in enumerate(colors):
+                base_offset = 0
+                for j, col in enumerate(colors[t]):
+                    if (dfin_wide_grp[t][col] == 0).all():
+                        continue
+                    # print(df[t][col])
+                    # print(df.index.to_list())
+                    figint.add_trace(go.Bar(
+                        x=df_month_data.index,
+                        y=dfin_wide_grp[t][col],
+                        base=base_offset,
+                        # Set the right yaxis depending on the selected product (from enumerate)
+                        # yaxis=f"y{i + 1}",
+                        # Offset the bar trace, offset needs to match the width
+                        # The values here are in milliseconds, 1billion ms is ~1/3 month
+                        offsetgroup=str(i),
+                        #offset=(i - 1) * 1,
+                        #width=1,
+                        legendgroup=t,
+                        legendgrouptitle_text=t,
+                        name=col,
+                        marker_color=colors[t][col],
+                        marker_line=dict(width=2, color="#333"),
+                        hovertemplate="%{y}<extra></extra>"
+                                        )
+                                )
+                    
+                    base_offset += dfin_wide_grp[t][col]
+
+            #print(dfint.head())
+            #figint = px.bar(dfint,x = 'Target', y='value', color = 'variable',
+            #    color_discrete_sequence= px.colors.sequential.Greens, category_orders={"variable": ["Interval: 0", "Interval: 1", "Interval: 2",
+            #                                                                                   "Interval: 3","Interval: 4"]})
+            #figint.update_traces(width=0.4)
         else:
             dfint = dfint.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
             print(dfint)
