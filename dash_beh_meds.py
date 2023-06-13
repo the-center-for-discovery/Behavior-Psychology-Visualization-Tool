@@ -632,11 +632,13 @@ def dashboard():
 
             figdur = go.Figure(
                 layout=go.Layout(
+                    template = 'plotly_white',
                     height=600,
                     #width=1000,
                     barmode="group",
-                    yaxis_showticklabels=False,
-                    yaxis_showgrid=False,
+                    yaxis_title="count",
+                    yaxis_showticklabels=True,
+                    yaxis_showgrid=True,
                     yaxis_range=[0, dfdur_wide_grp.groupby(axis=1, level=0).sum().max().max() * 1.5],
                 # Secondary y-axis overlayed on the primary one and not visible
                     yaxis2=go.layout.YAxis(
@@ -645,56 +647,57 @@ def dashboard():
                         overlaying="y",
                         anchor="x",
                     ),
-                    font=dict(size=24),
+                    font=dict(size=12),
                     legend_x=0,
                     legend_y=1,
                     legend_orientation="h",
-                    hovermode="x",
+                    hovermode="x unified",
+                    showlegend=False,
                     margin=dict(b=0,t=10,l=0,r=10)
                 )
             )
 
-            # Define some colors for the product, revenue pairs
+            # Define some colors for the duration data
             colors = {
                 "beh 1" : {
-                    "Duration: 20+" : "#00D8FF",
-                    "Duration: 16-20": "#00BCDE",
-                    "Duration: 11-15": "#00A7C6",
-                    "Duration: 6-10": "#0089A3",
-                    "Duration: <5": "#006D82",
-                    "Duration: 0": "#005262",
+                    "Duration: 0": "#00D8FF",#
+                    "Duration: <5": "#00BCDE",#
+                    "Duration: 6-10": "#00A7C6",#
+                    "Duration: 11-15": "#0089A3",#
+                    "Duration: 16-20": "#006D82",#
+                    "Duration: 20+" : "#005262",#
                 },
                 "beh 2" : {
-                    "Duration: 20+" : "#F7FF00",
-                    "Duration: 16-20": "#D6DD00",
-                    "Duration: 11-15": "#BAC100",
-                    "Duration: 6-10": "#9CA200",
-                    "Duration: <5": "#838800",
-                    "Duration: 0": "#6A6E00",
+                    "Duration: 0": "#F7FF00",#
+                    "Duration: <5": "#D6DD00",#
+                    "Duration: 6-10": "#BAC100",#
+                    "Duration: 11-15": "#9CA200",#
+                    "Duration: 16-20": "#838800",#
+                    "Duration: 20+" : "#6A6E00",#
                 },
                 "beh 3" : {
-                    "Duration: 20+" : "#00FF08",
-                    "Duration: 16-20": "#00ED07",
-                    "Duration: 11-15": "#00D006",
-                    "Duration: 6-10": "#00AD05",
-                    "Duration: <5": "#008C04",
-                    "Duration: 0": "#006A03",
+                    "Duration: 0": "#00FF08",#
+                    "Duration: <5": "#00ED07",#
+                    "Duration: 6-10": "#00D006",#
+                    "Duration: 11-15": "#00AD05",#
+                    "Duration: 16-20": "#008C04",#
+                    "Duration: 20+" : "#006A03",#
                 },
                 "beh 4" : {
-                    "Duration: 20+" : "#FF0000",
-                    "Duration: 16-20": "#F00202",
-                    "Duration: 11-15": "#CA0000",
-                    "Duration: 6-10": "#AF0000",
-                    "Duration: <5": "#900000",
-                    "Duration: 0": "#6C0000",
+                    "Duration: 0": "#FF0000",#
+                    "Duration: <5": "#F00202",#
+                    "Duration: 6-10": "#CA0000",#
+                    "Duration: 11-15": "#AF0000",#
+                    "Duration: 16-20": "#900000",#
+                    "Duration: 20+" : "#6C0000",#
                 },
                 "beh 5" : {
-                    "Duration: 20+" : "#d900ff",
-                    "Duration: 16-20": "#bd02de",
-                    "Duration: 11-15": "#9a02b5",
-                    "Duration: 6-10": "#85039c",
-                    "Duration: <5": "#68017a",
-                    "Duration: 0": "#43014f",
+                    "Duration: 0": "#d900ff",#
+                    "Duration: <5": "#bd02de",#
+                    "Duration: 6-10": "#9a02b5",#
+                    "Duration: 11-15": "#85039c",#
+                    "Duration: 16-20": "#68017a",#
+                    "Duration: 20+" : "#43014f",#
                 },
             }
 
@@ -725,7 +728,7 @@ def dashboard():
                         name=col,
                         marker_color=colors[t][col],
                         marker_line=dict(width=2, color="#333"),
-                        hovertemplate= beh + " " + str(col)+ " - %{y} " + "<extra></extra>"
+                        hovertemplate= beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
                                         )
                                 )
                     
@@ -756,11 +759,13 @@ def dashboard():
             # Create a figure with the right layout
             figint = go.Figure(
                 layout=go.Layout(
+                    template = 'plotly_white',
                     height=600,
                     #width=1000,
                     barmode="group",
-                    yaxis_showticklabels=False,
-                    yaxis_showgrid=False,
+                    yaxis_title="count",
+                    yaxis_showticklabels=True,
+                    yaxis_showgrid=True,
                     yaxis_range=[0, dfin_wide_grp.groupby(axis=1, level=0).sum().max().max() * 1.5],
                 # Secondary y-axis overlayed on the primary one and not visible
                     yaxis2=go.layout.YAxis(
@@ -769,16 +774,17 @@ def dashboard():
                         overlaying="y",
                         anchor="x",
                     ),
-                    font=dict(size=24),
+                    font=dict(size=12),
                     legend_x=0,
                     legend_y=1,
                     legend_orientation="h",
-                    hovermode="x",
-                    margin=dict(b=0,t=10,l=0,r=10)
+                    hovermode="x unified",
+                    margin=dict(b=0,t=10,l=0,r=10),
+                    showlegend=False
                 )
             )
 
-            # Define some colors for the product, revenue pairs
+            # Define some colors for the interval data
             colors = {
                 "SIB" : {
                     "Interval: 0" : "#00D8FF",
@@ -837,7 +843,7 @@ def dashboard():
                         name=col,
                         marker_color=colors[t][col],
                         marker_line=dict(width=2, color="#333"),
-                        hovertemplate="%{y}<extra></extra>"
+                        hovertemplate=beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
                                         )
                                 )
                     
