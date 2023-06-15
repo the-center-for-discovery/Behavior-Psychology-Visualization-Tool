@@ -622,6 +622,12 @@ def dashboard():
             flt_dur = (dfdur['Date'] >= start_date_wb) & (dfdur['Date'] <= end_date_wb)
             dfdur = dfdur.loc[flt_dur]
 
+            #remove trailing 0 entries
+            if not dfq.empty:
+                last_date = dfq['Date'].max()
+                dateflt_dur = (dfdur['Date'] <= last_date)
+                dfdur = dfdur.loc[dateflt_dur]
+
             targets = dfdur["Target"].unique()
             dfdur_wide = pd.pivot_table(dfdur, values='value', index=['Date', 'variable'], columns='Target',aggfunc=np.max)
             dfdur_wide_grp = pd.pivot_table(dfdur_wide, index="Date", columns="variable", values=targets)
@@ -630,8 +636,6 @@ def dashboard():
             df_month = dfdur_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfdur_wide_grp.columns].sum().reset_index()
             df_dates = dfdur_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfdur_wide_grp.columns].sum()
             dfdur_wide_grp = df_month.drop('Yr_Mnth', axis='columns')
-
-            print(df_month.tail(50))
 
             figdur = go.Figure(
                 layout=go.Layout(
@@ -750,6 +754,12 @@ def dashboard():
         if not dfint.empty:
             flt_int = (dfint['Date'] >= start_date_wb) & (dfint['Date'] <= end_date_wb)
             dfint = dfint.loc[flt_int]
+
+            #remove trailing 0 entries
+            if not dfq.empty:
+                last_date = dfq['Date'].max()
+                dateflt_int = (dfint['Date'] <= last_date)
+                dfint = dfint.loc[dateflt_int]
 
             targets = dfint["Target"].unique()
             dfin_wide = pd.pivot_table(dfint, values='value', index=['Date', 'variable'], columns='Target',aggfunc=np.max)
@@ -883,7 +893,7 @@ def dashboard():
             # print(dfmeds.tail())
             dfmeds['Medication'] = dfmeds['Medication'] + " (" + dfmeds['Units'] + ")"
             
-                        #format date variables for grouping requirements
+            #format date variables for grouping requirements
             dfmeds['Year'] = pd.DatetimeIndex(dfmeds['Date']).year
             dfmeds['Month'] = pd.DatetimeIndex(dfmeds['Date']).month
             dfmeds['Yr_Mnth'] = pd.to_datetime(dfmeds['Date']).dt.strftime('%Y-%m')
