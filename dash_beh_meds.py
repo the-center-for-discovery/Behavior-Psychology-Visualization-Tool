@@ -619,6 +619,9 @@ def dashboard():
         #DUR DATA ------------------------------------------------------------------------------------------------------
         #NOTE; review "grouped + stacked barchart examples" to get final plots 
         if not dfdur.empty:
+            flt_dur = (dfdur['Date'] >= start_date_wb) & (dfdur['Date'] <= end_date_wb)
+            dfdur = dfdur.loc[flt_dur]
+
             targets = dfdur["Target"].unique()
             dfdur_wide = pd.pivot_table(dfdur, values='value', index=['Date', 'variable'], columns='Target',aggfunc=np.max)
             dfdur_wide_grp = pd.pivot_table(dfdur_wide, index="Date", columns="variable", values=targets)
@@ -727,7 +730,7 @@ def dashboard():
                         legendgrouptitle_text=beh,
                         name=col,
                         marker_color=colors[t][col],
-                        marker_line=dict(width=2, color="#333"),
+                        marker_line=dict(width=0, color="#333"),
                         hovertemplate= beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
                                         )
                                 )
@@ -745,6 +748,9 @@ def dashboard():
         
         #INT DATA ------------------------------------------------------------------------------------------------------
         if not dfint.empty:
+            flt_int = (dfint['Date'] >= start_date_wb) & (dfint['Date'] <= end_date_wb)
+            dfint = dfint.loc[flt_int]
+
             targets = dfint["Target"].unique()
             dfin_wide = pd.pivot_table(dfint, values='value', index=['Date', 'variable'], columns='Target',aggfunc=np.max)
             dfin_wide_grp = pd.pivot_table(dfin_wide, index="Date", columns="variable", values=targets)
@@ -842,7 +848,7 @@ def dashboard():
                         legendgrouptitle_text=t,
                         name=col,
                         marker_color=colors[t][col],
-                        marker_line=dict(width=2, color="#333"),
+                        marker_line=dict(width=0, color="#333"),
                         hovertemplate=beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
                                         )
                                 )
