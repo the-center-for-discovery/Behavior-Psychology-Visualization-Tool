@@ -862,7 +862,7 @@ def dashboard():
                         hovertemplate=beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
                                         )
                                 )
-                    
+
                     base_offset += dfin_wide_grp[t][col]
 
             #print(dfint.head())
