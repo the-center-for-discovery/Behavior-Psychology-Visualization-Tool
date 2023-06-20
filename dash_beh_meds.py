@@ -267,7 +267,7 @@ def dashboard():
             ],
         )
     
-    app.layout = layout()
+    app.layout = layout
 
     ##############################
     
