@@ -7,6 +7,133 @@ import pdb
 
 warnings.simplefilter(action='ignore', category=UserWarning)
 
+#get behavior data with associated intensity and duration values. 
+def get_month_with_dur_int(workbook_xl, month):
+    #set dataframe display options 
+    pd.options.display.max_columns = 200
+    pd.options.display.max_rows = 200
+    warnings.filterwarnings('ignore')
+
+    #read in necessary sheets 
+    dfcolnmes = pd.read_excel(workbook_xl, sheet_name=month, skiprows=0)
+    df = pd.read_excel(workbook_xl, sheet_name=month, skiprows=1)
+
+    dfinfo = pd.read_excel(workbook_xl, sheet_name=0)
+    dfstudet = pd.read_excel(workbook_xl, sheet_name=2, header=None)
+    
+    #get years variable 
+    year = dfinfo.iloc[3,1]
+    year1, year2 = str.split(year, '-')
+
+
+    #clean up column names 
+    df.columns = df.columns.str.replace('.1','')
+    df.columns = df.columns.str.replace('.2','') 
+    df.columns = df.columns.str.replace('.3','') 
+    df.columns = df.columns.str.replace('.4','') 
+    df.columns = df.columns.str.replace('.5','')
+
+    #create 'month number' variable 
+    month_name = dfcolnmes.columns[0]
+    datetime_object = datetime.datetime.strptime(month_name, "%B")
+    month_num = datetime_object.month
+
+    #if month number is between 7 and 12 year1 is selected, else year2 
+    if 7 <= month_num <= 12:
+        year_num = year1
+    else:
+        year_num = year2
+
+    #create date string 
+    date = str(year_num) + '-' + str(month_num)
+
+
+    #create indexes and list variable 
+    idx1 = [8,26,44,62,80]
+    idx2 = [21,39,57,75,93]
+    tgt = [4,22,40,58,76]
+
+    dfdurinlist=[]
+    for i, enum in enumerate(idx1):
+        
+        dfiter = df.iloc[:,[0,1,2] + list(range(enum,idx2[i]))]
+        dfiter.insert(3,'Target', str(dfcolnmes.columns[tgt[i]]))
+        dfiter.drop(0, inplace=True)
+
+        #print(pd.DataFrame(dfiter.head()))
+        dfiter.columns.values[6] = 'Duration: 0'
+        dfiter.columns.values[7] = 'Duration: <5'
+        dfiter.columns.values[8] = 'Duration: 6-10'
+        dfiter.columns.values[9] = 'Duration: 11-15'
+        dfiter.columns.values[10] = 'Duration: 16-20'
+        dfiter.columns.values[11] = 'Duration: 20+'
+        dfiter.columns.values[12] = 'Interval: 0'
+        dfiter.columns.values[13] = 'Interval: 1'
+        dfiter.columns.values[14] = 'Interval: 2'
+        dfiter.columns.values[15] = 'Interval: 3'
+        dfiter.columns.values[16] = 'Interval: 4'
+
+        dfiter = dfiter.drop(dfiter.index[np.where(dfiter.index >= 94)])
+        dfiter.iloc[:,0] = dfiter.iloc[:,0].fillna(method='ffill')
+
+        #cut off dataframe rows based on number of days in month
+        if month_num == 4 or month_num == 6 or month_num == 9 or month_num == 11:
+            dfiter = dfiter.drop(dfiter.index[np.where(dfiter.index >= 90)])
+        elif month_num == 2:
+            dfiter = dfiter.drop(dfiter.index[np.where(dfiter.index >= 84)])
+        else:
+            dfiter = dfiter
+        
+        dfdurinlist.append(dfiter)
+        
+    # if isinstance(dfdurinlist[0], pd.DataFrame):
+    dfdurin = pd.concat(dfdurinlist)
+
+    #create date column and convery to padas datetime
+    dfdurin['Date'] = date + '-' + dfdurin.iloc[:,0].astype(str)
+    dfdurin['Date'] = pd.to_datetime(dfdurin['Date'])
+    
+    # print(dfdurin)
+    
+    #NOTE; add python debugger and find out why it's returning a tuple 
+    # dfdurin = pd.concat(dfdurinlist)
+    
+    # print(dfdurin)
+    # print(dfdurin.head())
+    dfdurin.drop(columns=[dfdurin.columns[4],dfdurin.columns[5]], inplace=True)
+    durin_m = pd.melt(dfdurin, id_vars = [dfdurin.columns[0],dfdurin.columns[1],dfdurin.columns[2],dfdurin.columns[3]])
+
+    #clean up values, return NaN for all unrecognized strings (ie ".")
+    values = durin_m['value']
+    for value_i, val in enumerate(values):
+        try: 
+            durin_m['value'][value_i] = float(durin_m['value'][value_i])
+        except:
+            durin_m['value'][value_i] = float("NaN")
+    
+    durin_m = durin_m.groupby(['Date','Target','variable'])['value'].sum().reset_index()
+    durin_m = durin_m[~durin_m['Target'].str.contains('Insert')]
+    
+    duration = durin_m[durin_m['variable'].str.contains('Duration')]
+    intensity = durin_m[durin_m['variable'].str.contains('Interval')]
+
+    return duration, intensity
+
+#aggregates all months data into a single data frame with associated intensity and duration values.
+def get_all_months_int_dur(workbook_xl):
+    months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
+    xl_file = pd.ExcelFile(workbook_xl)                
+    
+    duration_data = []
+    intensity_data = []
+    
+    for month in months:
+        duration, intensity = get_month_with_dur_int(xl_file, month)
+        # print(df_month)
+        duration_data.append(duration)
+        intensity_data.append(intensity)
+    return pd.concat(duration_data), pd.concat(intensity_data)
+
 #define a function encapsulting above code so that we can get data for one month
 def get_month_dataframe(workbook_xl, month):
     #set dataframe display options 
@@ -32,7 +159,11 @@ def get_month_dataframe(workbook_xl, month):
     #print(dfbeh.head())
     dfbeh = dfbeh.rename(columns = {'Unnamed: 1':'Shift','Unnamed: 2':'No Data','Unnamed: 7':str(dfbeh.columns[3])+'_beh','Unnamed: 25':str(dfbeh.columns[5])+'_beh',
                                     'Unnamed: 43':str(dfbeh.columns[7])+'_beh','Unnamed: 61':str(dfbeh.columns[9])+'_beh','Unnamed: 79':str(dfbeh.columns[11])+'_beh'})
+    
+    #print(dfbeh.iloc[:,0])
     dfbeh.iloc[:,0] = dfbeh.iloc[:,0].fillna(method='ffill')
+    #print(dfbeh.iloc[:,0])
+
 
     #create 'month number' variable 
     month_name = dfbeh.columns[0]
@@ -80,7 +211,7 @@ def get_month_dataframe(workbook_xl, month):
     #create date column and convery to padas datetime
     behs['Date'] = date + '-' + behs.iloc[:,0].astype(str)
     behs['Date'] = pd.to_datetime(behs['Date'])
-
+    
     #clean up values, return NaN for all unrecognized strings (ie ".")
     values = behs['value']
     for value_i, val in enumerate(values):
@@ -92,6 +223,18 @@ def get_month_dataframe(workbook_xl, month):
     #get the name of the first column, which we drop
     month_to_remove = behs.columns[0]
     return behs.drop(month_to_remove, axis=1)
+
+#aggregates all months data into a single data frame
+def get_all_months_df(workbook_xl):
+    months = ['July', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'June']
+    xl_file = pd.ExcelFile(workbook_xl)                
+    months_data = []
+    
+    for month in months:
+        df_month = get_month_dataframe(xl_file, month)
+        print(df_month)
+        months_data.append(df_month)
+    return pd.concat(months_data)
 
 # gets data for medication that begins on column = start_column_index
 # medications are seperated by 9 columns in the workbook, so medication 1
