@@ -45,7 +45,7 @@ def dashboard():
     
     #------------------------------------------------------------------------
     #design layout of UI
-    def layout():
+    def serve_layout():
         return html.Div([
                     #div containing labels and input functions 
                     html.Div([
@@ -267,7 +267,7 @@ def dashboard():
             ],
         )
     
-    app.layout = layout
+    app.layout = serve_layout
 
     ##############################
     
@@ -955,10 +955,10 @@ dashboard()
 print("\nComplete! \n")
 
 if __name__ == '__main__':
-    # app.run_server(debug=True)
+    app.run_server(debug=True)
     
     #Conor's Mac
     # app.run_server(host='10.1.183.58', port=8050)
     
     #Mac Pro0
-    app.run_server(host='10.1.84.51', port=8050)
+    # app.run_server(host='10.1.84.51', port=8050)
