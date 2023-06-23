@@ -665,7 +665,7 @@ def dashboard():
             )
 
             # Define some colors for the duration data
-            colors = {
+            colors = { 
                 "beh 1" : {
                     "Duration: 0": "#00D8FF",#
                     "Duration: <5": "#00BCDE",#
@@ -802,33 +802,40 @@ def dashboard():
 
             # Define some colors for the interval data
             colors = {
-                "SIB" : {
+                "beh 1" : {
                     "Interval: 0" : "#00D8FF",
                     "Interval: 1": "#00BCDE",
                     "Interval: 2": "#00A7C6",
                     "Interval: 3": "#0089A3",
                     "Interval: 4": "#006D82",
                 },
-                "Aggression" : {
+                "beh 2" : {
                     "Interval: 0" : "#F7FF00",
                     "Interval: 1": "#D6DD00",
                     "Interval: 2": "#BAC100",
                     "Interval: 3": "#9CA200",
                     "Interval: 4": "#838800",
                 },
-                "Disruptive" : {
+                "beh 3" : {
                     "Interval: 0" : "#00FF08",
                     "Interval: 1": "#00ED07",
                     "Interval: 2": "#00D006",
                     "Interval: 3": "#00AD05",
                     "Interval: 4": "#008C04",
                 },
-                "Self Mutilation" : {
+                "beh 4" : {
                     "Interval: 0" : "#FF0000",
                     "Interval: 1": "#F00202",
                     "Interval: 2": "#CA0000",
                     "Interval: 3": "#AF0000",
                     "Interval: 4": "#900000",
+                },
+                "beh 5" : {
+                    "Interval: 0": "#d900ff",#
+                    "Interval: 1": "#bd02de",#
+                    "Interval: 2": "#9a02b5",#
+                    "Interval: 3": "#85039c",#
+                    "Interval: 4": "#68017a",#
                 },
             }
 
@@ -839,13 +846,16 @@ def dashboard():
             for i, t in enumerate(colors):
                 base_offset = 0
                 for j, col in enumerate(colors[t]):
-                    if (dfin_wide_grp[t][col] == 0).all():
+                    if i >= len(targets):
+                        continue
+                    beh = targets[i]
+                    if (dfin_wide_grp[beh][col] == 0).all():
                         continue
                     # print(df[t][col])
                     # print(df.index.to_list())
                     figint.add_trace(go.Bar(
                         x=df_month_data.index,
-                        y=dfin_wide_grp[t][col],
+                        y=dfin_wide_grp[beh][col],
                         base=base_offset,
                         # Set the right yaxis depending on the selected product (from enumerate)
                         # yaxis=f"y{i + 1}",
@@ -854,8 +864,8 @@ def dashboard():
                         offsetgroup=str(i),
                         #offset=(i - 1) * 1,
                         #width=1,
-                        legendgroup=t,
-                        legendgrouptitle_text=t,
+                        legendgroup=beh,
+                        legendgrouptitle_text=beh,
                         name=col,
                         marker_color=colors[t][col],
                         marker_line=dict(width=0, color="#333"),
@@ -863,7 +873,7 @@ def dashboard():
                                         )
                                 )
 
-                    base_offset += dfin_wide_grp[t][col]
+                    base_offset += dfin_wide_grp[beh][col]
 
             #print(dfint.head())
             #figint = px.bar(dfint,x = 'Target', y='value', color = 'variable',
