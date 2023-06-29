@@ -734,11 +734,12 @@ def dashboard():
                         legendgrouptitle_text=beh,
                         name=col,
                         marker_color=colors[t][col],
+                        
                         marker_line=dict(width=0, color="#333"),
-                        hovertemplate= beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
+                        hoverinfo='skip',
+                        #hovertemplate= beh + " " + str(col)+ ": %{y} - %{base}" + "<extra></extra>"
                                         )
                                 )
-                    
                     base_offset += dfdur_wide_grp[beh][col]
 
             #figdur = px.bar(dfdur,x = 'Target', y='value', color = 'variable',
@@ -869,7 +870,8 @@ def dashboard():
                         name=col,
                         marker_color=colors[t][col],
                         marker_line=dict(width=0, color="#333"),
-                        hovertemplate=beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
+                        hoverinfo='skip',
+                        # hovertemplate=beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
                                         )
                                 )
 
