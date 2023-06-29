@@ -722,6 +722,7 @@ def dashboard():
                     figdur.add_trace(go.Bar(
                         x=df_dates.index,
                         y=dfdur_wide_grp[beh][col],
+                        customdata=dfdur_wide_grp[beh][col],
                         base=base_offset,
                         # Set the right yaxis depending on the selected product (from enumerate)
                         # yaxis=f"y{i + 1}",
@@ -737,8 +738,8 @@ def dashboard():
                         
                         marker_line=dict(width=0, color="#333"),
                         #hoverinfo='skip',
-                        hovertemplate= beh + " " + str(col) + "<extra></extra>"
-                        #hovertemplate= beh + " " + str(col)+ ": %{y} - %{base}" + "<extra></extra>"
+                        #hovertemplate= beh + " " + str(col) + "<extra></extra>"
+                        hovertemplate= beh + " " + str(col)+ ": %{customdata}" + "<extra></extra>"
                                         )
                                 )
                     base_offset += dfdur_wide_grp[beh][col]
@@ -858,6 +859,7 @@ def dashboard():
                     figint.add_trace(go.Bar(
                         x=df_month_data.index,
                         y=dfin_wide_grp[beh][col],
+                        customdata=dfin_wide_grp[beh][col],
                         base=base_offset,
                         # Set the right yaxis depending on the selected product (from enumerate)
                         # yaxis=f"y{i + 1}",
@@ -872,7 +874,7 @@ def dashboard():
                         marker_color=colors[t][col],
                         marker_line=dict(width=0, color="#333"),
                         #hoverinfo='skip',
-                        hovertemplate=beh + " " + str(col)+ "<extra></extra>"
+                        hovertemplate=beh + " " + str(col)+ ": %{customdata} " + "<extra></extra>"
                         #hovertemplate=beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
                                         )
                                 )
