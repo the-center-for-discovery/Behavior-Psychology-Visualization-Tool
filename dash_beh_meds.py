@@ -736,7 +736,8 @@ def dashboard():
                         marker_color=colors[t][col],
                         
                         marker_line=dict(width=0, color="#333"),
-                        hoverinfo='skip',
+                        #hoverinfo='skip',
+                        hovertemplate= beh + " " + str(col) + "<extra></extra>"
                         #hovertemplate= beh + " " + str(col)+ ": %{y} - %{base}" + "<extra></extra>"
                                         )
                                 )
@@ -870,8 +871,9 @@ def dashboard():
                         name=col,
                         marker_color=colors[t][col],
                         marker_line=dict(width=0, color="#333"),
-                        hoverinfo='skip',
-                        # hovertemplate=beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
+                        #hoverinfo='skip',
+                        hovertemplate=beh + " " + str(col)+ "<extra></extra>"
+                        #hovertemplate=beh + " " + str(col)+ ": %{y} " + "<extra></extra>"
                                         )
                                 )
 
