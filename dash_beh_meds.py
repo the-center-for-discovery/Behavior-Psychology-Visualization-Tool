@@ -31,21 +31,22 @@ app = dash.Dash(__name__, title='Behavior Medication Dashboard', external_styles
 def dashboard():
     #import necessary files here
     pd.set_option('display.max_columns', 200)
-
-    #get date
-    # Textual month, day and year
-    today = datetime.datetime.today().date()
-    today = today.strftime("%B %d, %Y")
-    today_fmt = pd.to_datetime(today)
-
-    #format date variables
-    year = date.today().strftime('%Y')
-    month = date.today().strftime('%m')
-    day = date.today().strftime('%d')
     
     #------------------------------------------------------------------------
     #design layout of UI
     def serve_layout():
+
+        #get date
+        # Textual month, day and year
+        today = datetime.datetime.today().date()
+        today = today.strftime("%B %d, %Y")
+        today_fmt = pd.to_datetime(today)
+
+        #format date variables
+        year = date.today().strftime('%Y')
+        month = date.today().strftime('%m')
+        day = date.today().strftime('%d')
+        
         return html.Div([
                     #div containing labels and input functions 
                     html.Div([
