@@ -46,7 +46,7 @@ def dashboard():
         year = date.today().strftime('%Y')
         month = date.today().strftime('%m')
         day = date.today().strftime('%d')
-        
+
         return html.Div([
                     #div containing labels and input functions 
                     html.Div([
@@ -540,8 +540,10 @@ def dashboard():
 
         #if dataframe empty pass in dummy data
         if dfg.empty:
-            print(dfg)        
-            dfg = dfg.append({date_frmt: start_date_wb,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
+            print(dfg)
+            df_add = pd.DataFrame({date_frmt: [start_date_wb],'Target':['Null'], 'Episode_Count':[0]})
+            dfg = pd.concat([dfg, df_add], ignore_index=True)
+            #dfg = dfg.append({date_frmt: start_date_wb,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
         
         #ceate charts for behavior data
         if beh_gph == 'bar': 
@@ -750,8 +752,10 @@ def dashboard():
             #                                                                                "Duration: 11-15","Duration: 16-20", "Duration: 20+"]})
             #figdur.update_traces(width=0.4)
         else:
-            dfdur = dfdur.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
-            print(dfdur)
+            df_add = pd.DataFrame({'Date': ['None'],'Target':['Null'], 'variable':['Null'], 'value':['Null']})
+            dfdur = pd.concat([dfdur, df_add], ignore_index=True)
+            #dfdur = dfdur.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
+            #print(dfdur)
             figdur = px.bar(dfdur,x = 'Target', y='value', color = 'variable')
         
         #INT DATA ------------------------------------------------------------------------------------------------------
@@ -888,7 +892,9 @@ def dashboard():
             #                                                                                   "Interval: 3","Interval: 4"]})
             #figint.update_traces(width=0.4)
         else:
-            dfint = dfint.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
+            df_add = pd.DataFrame({'Date': ['None'],'Target':['Null'], 'variable':['Null'], 'value':['Null']})
+            dfint = pd.concat([dfint, df_add], ignore_index=True)
+            #dfint = dfint.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
             print(dfint)
             figint = px.bar(dfint,x = 'Target', y='value', color = 'variable')
     
@@ -925,7 +931,9 @@ def dashboard():
 
             dfmeds = dfmeds.groupby(['Medication']).apply(expand_dates).reset_index().merge(dfmeds, how='left')[['Medication', 'Date', 'Dose']].ffill()
         else:
-            dfmeds = dfmeds.append({'Medication':'Null','Date': 'None', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
+            df_add = pd.DataFrame({'Medication':['Null'],'Date': ['None'], 'Dose':[0],'variable':['Null'], 'Units':['Null'], 'Dose':[0]})
+            dfmeds = pd.concat([dfmeds, df_add], ignore_index=True)
+            #dfmeds = dfmeds.append({'Medication':'Null','Date': 'None', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
         
         # read date range from UI and filter medication dataset 
         flt_meds = (dfmeds['Date'] >= start_date_wb) & (dfmeds['Date'] <= end_date_wb)
