@@ -318,7 +318,7 @@ def dashboard():
             
             #convert episode values to float and aggregate mean per shift 
             df['value'] = df['value'].astype(float)
-            dfmean = df.groupby(['Date', 'Shift','variable'],sort=False,)['value'].mean().round(2).reset_index()
+            dfmean = df.groupby(['Date', 'Shift','variable'],sort=False,)['value'].mean().round(2).reset_index(allow_duplicates=True)
             dfmean = pd.concat([stored_df, dfmean])
             # print(dfmean)
 
@@ -516,45 +516,45 @@ def dashboard():
             #NOTE; dataframes are aggregated here per selection of timeframe 
             #determine groupings for various graphical outputs
             if time_sel == 'mon' and agg == 'mean':
-                dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
+                dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index(allow_duplicates=True)
                 dfg = dfm
                 dfg.sort_values(by = ['Yr_Mnth','Target'], inplace=True)
             elif time_sel == 'mon' and agg == 'sum':
-                dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
+                dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index(allow_duplicates=True)
                 dfg = dfm
                 dfg.sort_values(by = ['Yr_Mnth','Target'], inplace=True)
             else:
                 print('Process Complete')
             if time_sel == 'wk' and agg =='mean':
                 dfq['Date'] = pd.to_datetime(dfq['Date'])
-                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].mean().round(2).reset_index().sort_values('Date')
+                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].mean().round(2).reset_index(allow_duplicates=True).sort_values('Date')
                 dfg = dfw
                 dfg.sort_values(by = ['Date','Target'], inplace=True)
             elif time_sel == 'wk' and agg =='sum':
                 dfq['Date'] = pd.to_datetime(dfq['Date'])
-                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].sum().round(2).reset_index().sort_values('Date')
+                dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].sum().round(2).reset_index(allow_duplicates=True).sort_values('Date')
                 dfg = dfw
                 dfg.sort_values(by = ['Date','Target'], inplace=True)
             else:
                 print('Process Complete')
             
             if time_sel == 'day' and agg == 'mean':
-                dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
+                dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index(allow_duplicates=True)
                 dfg = dfd
                 dfg.sort_values(by = ['Date','Target'], inplace=True)
             elif time_sel == 'day' and agg == 'sum':
-                dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
+                dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index(allow_duplicates=True)
                 dfg = dfd
                 dfg.sort_values(by = ['Date','Target'], inplace=True)
             else:
                 print('Process Complete')
 
             if time_sel == 'roll' and agg == 'mean':
-                dfm = dfq.groupby(['Rolling','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
+                dfm = dfq.groupby(['Rolling','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index(allow_duplicates=True)
                 dfg = dfm
                 dfg.sort_values(by = ['Target'], inplace=True)
             elif time_sel == 'roll' and agg == 'sum':
-                dfm = dfq.groupby(['Rolling','Target'],sort=False,)['Episode_Count'].sum().round(2).reset_index()
+                dfm = dfq.groupby(['Rolling','Target'],sort=False,)['Episode_Count'].sum().round(2).reset_index(allow_duplicates=True)
                 dfg = dfm
                 dfg.sort_values(by = ['Target'], inplace=True)
             else:
@@ -667,7 +667,7 @@ def dashboard():
             dfdur_wide_grp = pd.pivot_table(dfdur_wide, index="Date", columns="variable", values=targets)
 
             dfdur_wide_grp['Yr_Mnth'] = pd.to_datetime(dfdur_wide_grp.index).strftime('%Y-%m')
-            df_month = dfdur_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfdur_wide_grp.columns].sum().reset_index()
+            df_month = dfdur_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfdur_wide_grp.columns].sum().reset_index(allow_duplicates=True)
             df_dates = dfdur_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfdur_wide_grp.columns].sum()
             dfdur_wide_grp = df_month.drop('Yr_Mnth', axis='columns')
 
@@ -812,7 +812,7 @@ def dashboard():
 
             #group by month
             dfin_wide_grp['Yr_Mnth'] = pd.to_datetime(dfin_wide_grp.index).strftime('%Y-%m')
-            dfin_m = dfin_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfin_wide_grp.columns].sum().reset_index()
+            dfin_m = dfin_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfin_wide_grp.columns].sum().reset_index(allow_duplicates=True)
             df_month_data = dfin_wide_grp.groupby(['Yr_Mnth'],sort=False,)[dfin_wide_grp.columns].sum()
             dfin_wide_grp = dfin_m.drop('Yr_Mnth', axis='columns')
 
@@ -970,7 +970,7 @@ def dashboard():
             def expand_dates(ser):
                 return pd.DataFrame({'Date': pd.date_range(ser['Date'].min(), end_date_meds, freq='D')})
 
-            dfmeds = dfmeds.groupby(['Medication']).apply(expand_dates).reset_index().merge(dfmeds, how='left')[['Medication', 'Date', 'Dose']].ffill()
+            dfmeds = dfmeds.groupby(['Medication']).apply(expand_dates).reset_index(allow_duplicates=True).merge(dfmeds, how='left')[['Medication', 'Date', 'Dose']].ffill()
         else:
             df_add = pd.DataFrame({'Medication':['Null'],'Date': ['None'], 'Dose':[0],'variable':['Null'], 'Units':['Null'], 'Dose':[0]})
             dfmeds = pd.concat([dfmeds, df_add], ignore_index=True)
