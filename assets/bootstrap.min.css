@@ -221,10 +221,11 @@ a:hover {
   color: #13967d;
 }
 
+/*
 a:not([href]):not([class]), a:not([href]):not([class]):hover {
   color: inherit;
   text-decoration: none;
-}
+}*/
 
 pre,
 code,
