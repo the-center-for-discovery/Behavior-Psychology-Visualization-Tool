@@ -273,17 +273,19 @@ def dashboard():
     ##############################
     
     def parse_contents(contents, filename, date, store_data, store_dur_data, store_int_data, store_meds_data,stored_name, stored_name_list):
+        last_time = time.time()
+
         content_type, content_string = contents.split(',')
         
         decoded = base64.b64decode(content_string)
         stored_df = pd.DataFrame(store_data)
-        print("store data", store_data)
+        # print("store data", store_data)
         stored_dur_df = pd.DataFrame(store_dur_data)
-        print("stored dur data", store_dur_data)
+        # print("stored dur data", store_dur_data)
         stored_int_df = pd.DataFrame(store_int_data)
-        print("stored int data", store_dur_data)
+        # print("stored int data", store_dur_data)
         stored_meds_df = pd.DataFrame(store_meds_data)
-        print("stored_meds_df data", stored_meds_df)
+        # print("stored_meds_df data", stored_meds_df)
         stored_name_list = pd.DataFrame(stored_name_list)
 
         new_name = pd.DataFrame( {
@@ -320,13 +322,29 @@ def dashboard():
             dfmean = pd.concat([stored_df, dfmean])
             # print(dfmean)
 
+            # measure delta time
+            current_time = time.time()
+            print("time to call get_all_months " + str(current_time - last_time))
+            last_time = current_time
+
             dfmeds = get_all_meds_data(workbook_xl)
 
             dfmeds = pd.concat([stored_meds_df, dfmeds])
+
+            # measure delta time
+            current_time = time.time()
+            print("time to call get_all_meds_data " + str(current_time - last_time))
+            last_time = current_time
+            
             
             dfdur, dfint = get_all_months_int_dur(workbook_xl)
+
+            # measure delta time
+            current_time = time.time()
+            print("time to call get_all_months_int_dur " + str(current_time - last_time))
+            last_time = current_time
             
-            print(dfint)
+            # print(dfint)
         
         except Exception as e:
             print(e)
@@ -393,8 +411,9 @@ def dashboard():
     )
     # --------------------------------------------------------------------------------
     # define function to control graphical outputs
-    def update_graph(start_date,end_date,agg,time,beh_gph,scale,shift,data,store_dur_data,store_int_data,store_meds_data,stored_name,stored_name_list):
-        
+    def update_graph(start_date,end_date,agg,time_sel,beh_gph,scale,shift,data,store_dur_data,store_int_data,store_meds_data,stored_name,stored_name_list):
+        last_time = time.time()
+
         if not stored_name:
             patient = 'patient'
         else:
@@ -407,12 +426,12 @@ def dashboard():
         #covert workbooks to dataframes     
         df_workbook = pd.DataFrame(data)
         dfdur = pd.DataFrame(store_dur_data)
-        print(dfdur)
+        #print(dfdur)
         dfint = pd.DataFrame(store_int_data)
-        print(dfint)        
+        #print(dfint)        
         dfmeds = pd.DataFrame(store_meds_data)
         dfnames = pd.DataFrame(stored_name_list)
-        print(f"list of names - {list(dfnames.columns)}")
+        #print(f"list of names - {list(dfnames.columns)}")
         
         #rename Target and Episode_Count columns 
         if not df_workbook.empty:
@@ -448,19 +467,25 @@ def dashboard():
             tally = "Count"
         # print('time: ' + str(time))
         #select date format 
-        if time == 'mon':
+        if time_sel == 'mon':
             date_frmt = "Yr_Mnth"
-        elif time == 'wk' or time == 'day':
+        elif time_sel == 'wk' or time_sel == 'day':
             date_frmt = "Date"
-        elif time == 'shift':
+        elif time_sel == 'shift':
             date_frmt = "Date_Time"
             
-        elif time == 'roll':
+        elif time_sel == 'roll':
             date_frmt = "Rolling"
         else:
             date_frmt = "Year"
         
         #select shift
+        
+        # measure delta time
+        current_time = time.time()
+        print("time to initial data frame load " + str(current_time - last_time))
+        last_time = current_time
+
         #don't process dfq if dfq is empty
         if not dfq.empty:
                             
@@ -490,22 +515,22 @@ def dashboard():
 
             #NOTE; dataframes are aggregated here per selection of timeframe 
             #determine groupings for various graphical outputs
-            if time == 'mon' and agg == 'mean':
+            if time_sel == 'mon' and agg == 'mean':
                 dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
                 dfg = dfm
                 dfg.sort_values(by = ['Yr_Mnth','Target'], inplace=True)
-            elif time == 'mon' and agg == 'sum':
+            elif time_sel == 'mon' and agg == 'sum':
                 dfm = dfq.groupby(['Yr_Mnth','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
                 dfg = dfm
                 dfg.sort_values(by = ['Yr_Mnth','Target'], inplace=True)
             else:
                 print('Process Complete')
-            if time == 'wk' and agg =='mean':
+            if time_sel == 'wk' and agg =='mean':
                 dfq['Date'] = pd.to_datetime(dfq['Date'])
                 dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].mean().round(2).reset_index().sort_values('Date')
                 dfg = dfw
                 dfg.sort_values(by = ['Date','Target'], inplace=True)
-            elif time == 'wk' and agg =='sum':
+            elif time_sel == 'wk' and agg =='sum':
                 dfq['Date'] = pd.to_datetime(dfq['Date'])
                 dfw = dfq.groupby(['Target', pd.Grouper(key='Date', freq='W')])['Episode_Count'].sum().round(2).reset_index().sort_values('Date')
                 dfg = dfw
@@ -513,22 +538,22 @@ def dashboard():
             else:
                 print('Process Complete')
             
-            if time == 'day' and agg == 'mean':
+            if time_sel == 'day' and agg == 'mean':
                 dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
                 dfg = dfd
                 dfg.sort_values(by = ['Date','Target'], inplace=True)
-            elif time == 'day' and agg == 'sum':
+            elif time_sel == 'day' and agg == 'sum':
                 dfd = dfq.groupby(['Date','Year','Target',],sort=False,)['Episode_Count'].sum().round(2).reset_index()
                 dfg = dfd
                 dfg.sort_values(by = ['Date','Target'], inplace=True)
             else:
                 print('Process Complete')
 
-            if time == 'roll' and agg == 'mean':
+            if time_sel == 'roll' and agg == 'mean':
                 dfm = dfq.groupby(['Rolling','Target',],sort=False,)['Episode_Count'].mean().round(2).reset_index()
                 dfg = dfm
                 dfg.sort_values(by = ['Target'], inplace=True)
-            elif time == 'roll' and agg == 'sum':
+            elif time_sel == 'roll' and agg == 'sum':
                 dfm = dfq.groupby(['Rolling','Target'],sort=False,)['Episode_Count'].sum().round(2).reset_index()
                 dfg = dfm
                 dfg.sort_values(by = ['Target'], inplace=True)
@@ -540,7 +565,7 @@ def dashboard():
 
         #if dataframe empty pass in dummy data
         if dfg.empty:
-            print(dfg)
+            #print(dfg)
             df_add = pd.DataFrame({date_frmt: [start_date_wb],'Target':['Null'], 'Episode_Count':[0]})
             dfg = pd.concat([dfg, df_add], ignore_index=True)
             #dfg = dfg.append({date_frmt: start_date_wb,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
@@ -618,6 +643,12 @@ def dashboard():
                             x=1),
                             xaxis_title=None
                               ),
+        
+        # measure delta time
+        current_time = time.time()
+        print("time to load beh data " + str(current_time - last_time))
+        last_time = current_time
+        
         
         #DUR DATA ------------------------------------------------------------------------------------------------------
         #NOTE; review "grouped + stacked barchart examples" to get final plots 
@@ -757,6 +788,11 @@ def dashboard():
             #dfdur = dfdur.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
             #print(dfdur)
             figdur = px.bar(dfdur,x = 'Target', y='value', color = 'variable')
+
+        # measure delta time
+        current_time = time.time()
+        print("time to load DUR data " + str(current_time - last_time))
+        last_time = current_time
         
         #INT DATA ------------------------------------------------------------------------------------------------------
         if not dfint.empty:
@@ -895,12 +931,17 @@ def dashboard():
             df_add = pd.DataFrame({'Date': ['None'],'Target':['Null'], 'variable':['Null'], 'value':['Null']})
             dfint = pd.concat([dfint, df_add], ignore_index=True)
             #dfint = dfint.append({'Date': 'None','Target':'Null', 'variable':'Null', 'value':'Null'}, ignore_index=True)
-            print(dfint)
+            # print(dfint)
             figint = px.bar(dfint,x = 'Target', y='value', color = 'variable')
+
+        # measure delta time
+        current_time = time.time()
+        print("time to load INT data " + str(current_time - last_time))
+        last_time = current_time
     
         #MED DATA ------------------------------------------------------------------------------------------------------
         #group medication data, convert date vars to python datetime abd sort ascending
-        print(patient)
+        # print(patient)
         #drop any duplicate data created and convert Dose to numeric
         if not dfmeds.empty:
             dfmeds = pd.melt(dfmeds, id_vars =['Dose','Units','Medication'])
@@ -910,7 +951,7 @@ def dashboard():
             dfmeds = dfmeds.drop_duplicates(subset = ['Date','Medication'],keep='last')
 
             dfmeds['Dose'] = dfmeds['Dose'].astype(float)
-            print(end_date_meds)
+            # print(end_date_meds)
             dfmeds['Date'] = dfmeds['Date'].fillna(end_date_meds)
             dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
             # print(dfmeds.tail())
@@ -970,6 +1011,11 @@ def dashboard():
         if not df_workbook.empty and start_date_wb == start_date_wb:
             start_date_wb = start_date
             end_date_wb = end_date
+        
+        # measure delta time
+        current_time = time.time()
+        print("time to load MED data " + str(current_time - last_time))
+        last_time = current_time
         
         return fig, fig2, figdur, figint, start_date_wb, end_date_wb
 
