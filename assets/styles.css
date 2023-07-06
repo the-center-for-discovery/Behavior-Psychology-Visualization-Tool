@@ -273,3 +273,15 @@ input[type='radio']:checked {
         align-items: center;
     }
 }
+
+/* Links
+–––––––––––––––––––––––––––––––––––––––––––––––––– */
+a {
+    color: #1EAEDB; 
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+a:hover {
+    color: #0FA0CE; 
+}
