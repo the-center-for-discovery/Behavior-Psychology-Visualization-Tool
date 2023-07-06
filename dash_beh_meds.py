@@ -26,7 +26,7 @@ from read_workbook import *
 pd.options.mode.chained_assignment = None  # default='warn'
 
 #setup Dash app 
-app = dash.Dash(__name__, title='Behavior Medication Dashboard', external_stylesheets=[dbc.themes.DARKLY], prevent_initial_callbacks=True)
+app = dash.Dash(__name__, title='Behavior Medication Dashboard', prevent_initial_callbacks=True)
 
 def dashboard():
     #import necessary files here
