@@ -1,4 +1,32 @@
 Date,Shift,Target,Episode_Count,Year,Month,Yr_Mnth,Month_Formated,Rolling
+2022-07-01T00:00:00,7-3,Aggression,2.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,3-11,Aggression,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,11-7,Aggression,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,7-3,Disruptive,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,3-11,Disruptive,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,11-7,Disruptive,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,7-3,Self-Injury,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,3-11,Self-Injury,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,11-7,Self-Injury,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,7-3,Self Mutilation,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,3-11,Self Mutilation,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-01T00:00:00,11-7,Self Mutilation,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-02T00:00:00,7-3,Aggression,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-02T00:00:00,3-11,Aggression,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-02T00:00:00,7-3,Disruptive,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-02T00:00:00,3-11,Disruptive,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-02T00:00:00,7-3,Self-Injury,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-02T00:00:00,3-11,Self-Injury,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-02T00:00:00,7-3,Self Mutilation,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-02T00:00:00,3-11,Self Mutilation,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-05T00:00:00,7-3,Aggression,1.0,2022,7,2022-07,Jul,Rolling
+2022-07-05T00:00:00,3-11,Aggression,3.0,2022,7,2022-07,Jul,Rolling
+2022-07-05T00:00:00,7-3,Disruptive,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-05T00:00:00,3-11,Disruptive,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-05T00:00:00,7-3,Self-Injury,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-05T00:00:00,3-11,Self-Injury,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-05T00:00:00,7-3,Self Mutilation,0.0,2022,7,2022-07,Jul,Rolling
+2022-07-05T00:00:00,3-11,Self Mutilation,0.0,2022,7,2022-07,Jul,Rolling
 2022-07-06T00:00:00,7-3,Aggression,2.0,2022,7,2022-07,Jul,Rolling
 2022-07-06T00:00:00,3-11,Aggression,0.0,2022,7,2022-07,Jul,Rolling
 2022-07-06T00:00:00,11-7,Aggression,0.0,2022,7,2022-07,Jul,Rolling

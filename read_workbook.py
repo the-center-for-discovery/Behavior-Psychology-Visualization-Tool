@@ -2,6 +2,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import warnings
+import time
 
 import pdb
 
@@ -19,7 +20,7 @@ def get_month_with_dur_int(workbook_xl, month):
     df = pd.read_excel(workbook_xl, sheet_name=month, skiprows=1)
 
     dfinfo = pd.read_excel(workbook_xl, sheet_name=0)
-    dfstudet = pd.read_excel(workbook_xl, sheet_name=2, header=None)
+    # dfstudet = pd.read_excel(workbook_xl, sheet_name=2, header=None)
     
     #get years variable 
     year = dfinfo.iloc[3,1]
