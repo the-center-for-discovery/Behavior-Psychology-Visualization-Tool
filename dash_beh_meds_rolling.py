@@ -134,20 +134,20 @@ def dashboard():
                                         dcc.DatePickerRange(
                                                 id='my-date-picker-range',
                                                 calendar_orientation='horizontal',
-                                                with_portal = False,
-                                                clearable=False,
-                                                number_of_months_shown = 1,
+                                                with_portal = True,
+                                                clearable=True,
+                                                number_of_months_shown = 5,
                                                 min_date_allowed=date(2015, 1, 1),
                                                 max_date_allowed=date(int(year), int(month), int(day)),
                                                 initial_visible_month=date(int(year), int(month), int(day)),
                                                 start_date=date((int(year)-1), int(month), int(day)),
                                                 end_date=date(int(year), int(month), int(day)),
 
-                                                persistence=True,
+                                                persistence=False,
                                                 persisted_props=['start_date'],
                                                 persistence_type='session',  # session, local, or memory. Default is 'local'
 
-                                                updatemode='bothdates',
+                                                updatemode='singledate',
                                             ),
                                                 style={'margin-top': 20,},
                                                 width={'size':2,'offset':2, 'order':3},
@@ -155,6 +155,7 @@ def dashboard():
                                         html.Div(id='output-container-date-picker-range'),
                                     ]
                                     ),
+                            
                                 #row containing select chart type, select shift, select aggregation
                                 dbc.Row(
                                         [
@@ -360,10 +361,6 @@ def dashboard():
             patient = 'patient'
         else:
             patient = f"<b>{stored_name}</b>"
-        
-        # print(f"stored name {stored_name}")
-        
-        # print(f"list of names - {stored_name_list}")
     
         #covert workbooks to dataframes     
         df_workbook = pd.DataFrame(data)
@@ -382,8 +379,10 @@ def dashboard():
             
         #get start and end from workbook
         if not df_workbook.empty:
-            start_date_wb = df_workbook['Date'].iloc[0]
-            end_date_wb = df_workbook['Date'].iloc[-1]
+            start_date_wb = start_date
+            end_date_wb = end_date
+
+            end_date_meds = df_workbook['Date'].iloc[-1]
            
         else:
             start_date_wb = start_date
@@ -584,7 +583,7 @@ def dashboard():
             dfmeds = dfmeds.drop_duplicates(subset = ['Date','Medication'],keep='last')
 
             dfmeds['Dose'] = dfmeds['Dose'].astype(float)
-            dfmeds['Date'] = dfmeds['Date'].fillna(end_date_wb)
+            dfmeds['Date'] = dfmeds['Date'].fillna(end_date_meds)
             dfmeds['Date'] = pd.to_datetime(dfmeds['Date'])
             dfmeds['Medication'] = dfmeds['Medication'] + " (" + dfmeds['Units'] + ")"
             
@@ -595,19 +594,19 @@ def dashboard():
             dfmeds['Month_Formated'] = dfmeds['Month'].apply(lambda x: calendar.month_abbr[x])
             dfmeds['Rolling'] = 'Rolling'
             
-            print(dfmeds.head())
-            
             #front fill dosage data 
             def expand_dates(ser):
-                return pd.DataFrame({'Date': pd.date_range(ser['Date'].min(), date.today(), freq='D')})
+                return pd.DataFrame({'Date': pd.date_range(ser['Date'].min(), end_date_meds, freq='D')})
 
             dfmeds = dfmeds.groupby(['Medication']).apply(expand_dates).reset_index().merge(dfmeds, how='left')[['Medication', 'Date', 'Dose']].ffill()
         else:
             dfmeds = dfmeds.append({'Medication':'Null','Date': 'None', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
-        
-        # read date range from UI and filter medication dataset 
-        flt_meds = (dfmeds['Date'] >= start_date_wb) & (dfmeds['Date'] <= end_date_wb)
-        dfmeds = dfmeds.loc[flt_meds]
+            
+            # read date range from UI and filter medication dataset 
+            flt_meds = (dfmeds['Date'] >= start_date_wb) & (dfmeds['Date'] <= end_date_wb)
+            dfmeds = dfmeds.loc[flt_meds]
+            print(dfmeds.head())
+
 
         #create chart for medication data
         if scale == 'log':
@@ -650,7 +649,7 @@ dashboard()
 print("\nComplete! \n")
 
 if __name__ == '__main__':
-    # app.run_server(debug=True)
-        
+    app.run_server(debug=True)
+
     #Mac Pro
     app.run_server(host='10.1.84.39', port=8050)
