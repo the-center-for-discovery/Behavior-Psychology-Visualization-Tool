@@ -494,8 +494,9 @@ def dashboard():
 
         #if dataframe empty pass in dummy data
         if dfg.empty:        
-            dfg = dfg.append({date_frmt: start_date_wb,'Target':'Null', 'Episode_Count':0}, ignore_index=True)
-        
+            df_add = pd.DataFrame({date_frmt: [start_date_wb],'Target':['Null'], 'Episode_Count':[0]})
+            dfg = pd.concat([dfg, df_add], ignore_index=True)
+
         # print(dfg)
         #ceate charts for behavior data
         if beh_gph == 'bar': 
@@ -600,8 +601,10 @@ def dashboard():
 
             dfmeds = dfmeds.groupby(['Medication']).apply(expand_dates).reset_index().merge(dfmeds, how='left')[['Medication', 'Date', 'Dose']].ffill()
         else:
-            dfmeds = dfmeds.append({'Medication':'Null','Date': 'None', 'Dose':0,'variable':'Null', 'Units':'Null', 'Dose':0}, ignore_index=True)
-            
+            df_add = pd.DataFrame({'Medication':['Null'],'Date': ['None'], 'Dose':[0],'variable':['Null'], 'Units':['Null'], 'Dose':[0]})
+            dfmeds = pd.concat([dfmeds, df_add], ignore_index=True)
+
+
             # read date range from UI and filter medication dataset 
             flt_meds = (dfmeds['Date'] >= start_date_wb) & (dfmeds['Date'] <= end_date_wb)
             dfmeds = dfmeds.loc[flt_meds]
@@ -652,4 +655,4 @@ if __name__ == '__main__':
     app.run_server(debug=True)
 
     #Mac Pro
-    app.run_server(host='10.1.84.39', port=8050)
+    # app.run_server(host='10.1.84.39', port=8050)
